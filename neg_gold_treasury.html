@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>خزينة التحصيل — New Egypt Gold</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#BA7517;--gold-light:#FAEEDA;--gold-mid:#EF9F27;
+  --s0:#f5f5f3;--s1:#efefec;--s2:#ffffff;
+  --tp:#1a1a18;--ts:#5F5E5A;--tm:#B4B2A9;
+  --bd:rgba(0,0,0,0.1);--bds:rgba(0,0,0,0.18);
+  --bgs:#EAF3DE;--bgd:#FCEBEB;--bga:#E6F1FB;--bgw:#FAEEDA;
+  --tgs:#27500A;--tgd:#791F1F;--tga:#0C447C;--tgw:#633806;
+  --bds-s:#C0DD97;--bds-d:#F7C1C1;--bds-a:#B5D4F4;--bds-w:#FAC775;
+  --r:8px;
+}
+body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--s0);min-height:100vh;padding:1rem}
+
+/* Dark mode */
+body.dark{
+  --s0:#1a1a18;--s1:#242422;--s2:#2e2e2b;
+  --tp:#f0ede8;--ts:#a8a49e;--tm:#6b6860;
+  --bd:rgba(255,255,255,0.08);--bds:rgba(255,255,255,0.14);
+  --bgs:#1a2e12;--bgd:#2e1212;--bga:#0d1f35;--bgw:#2e1f06;
+  --tgs:#7dc55a;--tgd:#e07070;--tga:#6ab0e8;--tgw:#d4a44a;
+  --bds-s:#3a6b28;--bds-d:#6b2828;--bds-a:#1e4a7a;--bds-w:#6b4a12;
+  --gold:#d4a44a;--gold-mid:#d4a44a;
+}
+body.dark .modal-box{background:#2e2e2b}
+body.dark .fg input,body.dark .fg select{background:#1a1a18;color:var(--tp)}
+.app{background:var(--s0);border-radius:16px;border:0.5px solid var(--bd);overflow:hidden;max-width:1100px;margin:0 auto}
+.topbar{background:var(--s2);border-bottom:0.5px solid var(--bd);padding:0 1.5rem;display:flex;align-items:center}
+.brand{display:flex;align-items:center;gap:10px;padding:1rem 1.5rem 1rem 0;border-left:0.5px solid var(--bd);margin-left:1.5rem}
+.brand-icon{width:38px;height:38px;border-radius:10px;background:var(--bgw);border:0.5px solid var(--bds-w);display:flex;align-items:center;justify-content:center;font-size:20px}
+.brand-name{font-size:14px;font-weight:600;color:var(--tp)}
+.brand-sub{font-size:11px;color:var(--tm)}
+.nav-tabs{display:flex;gap:2px;flex:1;padding:0.6rem 0;flex-wrap:wrap}
+.ntab{padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;border:none;background:transparent;color:var(--tm);display:flex;align-items:center;gap:5px;transition:all 0.12s;white-space:nowrap}
+.ntab:hover{background:var(--s1);color:var(--ts)}
+.ntab.on{background:var(--bgw);color:var(--tgw);font-weight:600}
+.ntab i{font-size:14px}
+.date-chip{font-size:11px;color:var(--tm);background:var(--s1);border:0.5px solid var(--bd);border-radius:6px;padding:4px 10px;display:flex;align-items:center;gap:5px;white-space:nowrap}
+.panel{padding:1.5rem;display:none}
+.panel.on{display:block}
+.kpi-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:1.5rem}
+@media(max-width:700px){.kpi-row{grid-template-columns:1fr 1fr}}
+.kpi{background:var(--s2);border:0.5px solid var(--bd);border-radius:12px;padding:1rem 1.2rem;border-top:2.5px solid var(--bd)}
+.kpi-gold{border-top-color:var(--gold-mid)}.kpi-green{border-top-color:var(--bds-s)}.kpi-red{border-top-color:var(--bds-d)}.kpi-blue{border-top-color:var(--bds-a)}
+.kpi-label{font-size:11px;color:var(--tm);margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.kpi-val{font-size:19px;font-weight:600;color:var(--tp)}
+.kpi-sub{font-size:11px;color:var(--tm);margin-top:3px}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.sec-title{font-size:13px;font-weight:600;color:var(--ts);display:flex;align-items:center;gap:6px}
+.btns{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.btn-g{display:flex;align-items:center;gap:5px;padding:5px 12px;font-size:12px;border:0.5px solid var(--bds);border-radius:var(--r);background:var(--s2);color:var(--ts);cursor:pointer;white-space:nowrap}
+.btn-g:hover{background:var(--s1)}
+.btn-gold{display:flex;align-items:center;gap:5px;padding:6px 14px;font-size:12px;border:none;border-radius:var(--r);background:var(--gold);color:#fff;cursor:pointer;font-weight:600;white-space:nowrap}
+.btn-gold:hover{background:#854F0B}
+.upload-area{border:1.5px dashed var(--bds);border-radius:12px;padding:1.75rem;text-align:center;cursor:pointer;background:var(--s1);transition:border-color 0.15s,background 0.15s;margin-bottom:1rem}
+.upload-area:hover{border-color:var(--gold);background:var(--bgw)}
+.upload-area i{font-size:30px;color:var(--tm);display:block;margin-bottom:8px}
+.upload-area p{font-size:13px;color:var(--ts);font-weight:600;margin-bottom:3px}
+.upload-area span{font-size:11px;color:var(--tm)}
+.upload-area .best{font-size:11px;color:var(--tgw);background:var(--bgw);border:0.5px solid var(--bds-w);border-radius:4px;padding:2px 8px;display:inline-block;margin-top:5px}
+.filter-bar{display:flex;gap:8px;align-items:center;background:var(--s1);border:0.5px solid var(--bd);border-radius:var(--r);padding:8px 12px;margin-bottom:12px;flex-wrap:wrap}
+.filter-bar select,.filter-bar input{font-size:12px;padding:4px 8px;height:28px;border:0.5px solid var(--bds);border-radius:6px;background:var(--s2);color:var(--tp)}
+.filter-bar label{font-size:11px;color:var(--tm)}
+.tbl-wrap{border-radius:10px;border:0.5px solid var(--bd);overflow:hidden;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:620px}
+thead tr{background:var(--s1)}
+thead th{padding:9px 12px;text-align:right;font-weight:600;font-size:11px;color:var(--tm);border-bottom:0.5px solid var(--bd)}
+tbody td{padding:8px 12px;border-bottom:0.5px solid var(--bd);color:var(--tp);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--s1)}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.p-gold{background:#FAEEDA;color:#633806}.p-cash{background:#E6F1FB;color:#0C447C}
+.p-in{background:#EAF3DE;color:#27500A}.p-out{background:#FCEBEB;color:#791F1F}
+.p-ok{background:#EAF3DE;color:#27500A}.p-warn{background:#FCEBEB;color:#791F1F}
+.p-na{background:var(--s1);color:var(--tm);border:0.5px solid var(--bd)}
+.empty{text-align:center;padding:2.5rem 1rem;color:var(--tm)}
+.empty i{font-size:38px;display:block;margin-bottom:10px;opacity:0.4}
+.empty p{font-size:13px}.empty span{font-size:11px;display:block;margin-top:4px;color:var(--tm)}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:700px){.two-col{grid-template-columns:1fr}}
+.form-box{background:var(--s2);border:0.5px solid var(--bd);border-radius:12px;padding:1.25rem}
+.form-box h3{font-size:13px;font-weight:600;color:var(--tp);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.fg label{font-size:11px;color:var(--tm)}
+.fg input,.fg select{font-size:13px;padding:7px 10px;border:0.5px solid var(--bds);border-radius:var(--r);background:var(--s1);color:var(--tp);font-family:inherit}
+.fg input:focus,.fg select:focus{outline:2px solid var(--gold);outline-offset:1px}
+.cmp-day{background:var(--s2);border:0.5px solid var(--bd);border-radius:12px;padding:1.25rem;margin-bottom:12px}
+.cmp-head{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:10px;border-bottom:0.5px solid var(--bd)}
+.cmp-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media(max-width:600px){.cmp-grid{grid-template-columns:1fr}}
+.cbox{border-radius:10px;border:0.5px solid var(--bd);padding:1rem;background:var(--s1)}
+.cbox-title{font-size:11px;color:var(--tm);margin-bottom:10px;font-weight:600}
+.cbox-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:0.5px solid var(--bd);font-size:12px}
+.cbox-row:last-child{border-bottom:none}
+.cbox-ok{background:#EAF3DE;border-color:#C0DD97}.cbox-bad{background:#FCEBEB;border-color:#F7C1C1}
+.proc{text-align:center;padding:1.25rem;color:var(--tm);font-size:13px}
+.proc i{font-size:22px;display:block;margin-bottom:6px;color:var(--gold);animation:spin 1s linear infinite}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.toast-ok{background:#EAF3DE;border:0.5px solid #C0DD97;border-radius:var(--r);padding:8px 14px;font-size:12px;color:#27500A;display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.toast-err{background:#FCEBEB;border:0.5px solid #F7C1C1;border-radius:var(--r);padding:8px 14px;font-size:12px;color:#791F1F;display:flex;align-items:center;gap:6px;margin-bottom:10px}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:999;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal-box{background:#fff;border-radius:14px;border:0.5px solid var(--bd);padding:1.5rem;width:440px;max-width:95vw;max-height:90vh;overflow-y:auto}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.modal-head span{font-size:14px;font-weight:600}
+.m-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.m-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem}
+.btn-cancel{padding:7px 16px;font-size:12px;border:0.5px solid var(--bds);border-radius:var(--r);background:var(--s1);cursor:pointer;color:var(--ts)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-icon">🏅</div>
+      <div><div class="brand-name">New Egypt Gold</div><div class="brand-sub">نظام خزينة التحصيل</div></div>
+    </div>
+    <div class="nav-tabs">
+      <button class="ntab on" onclick="go('collect',this)"><i class="ti ti-layout-dashboard"></i> لوحة التحصيل</button>
+      <button class="ntab" onclick="go('book',this)"><i class="ti ti-book-2"></i> الرصيد الدفتري</button>
+      <button class="ntab" onclick="go('inv',this)"><i class="ti ti-clipboard-check"></i> جرد آخر اليوم</button>
+      <button class="ntab" onclick="go('compare',this)"><i class="ti ti-scale"></i> المقارنة</button>
+      <button class="ntab" onclick="go('details',this)"><i class="ti ti-chart-pie"></i> تفاصيل النقدية</button>
+    </div>
+    <button id="themeBtn" onclick="toggleTheme()" style="background:none;border:0.5px solid var(--bds);border-radius:var(--r);padding:5px 10px;cursor:pointer;color:var(--ts);font-size:13px;display:flex;align-items:center;gap:5px;margin-left:8px">
+      <i class="ti ti-moon" id="themeIcon"></i><span id="themeTxt">داكن</span>
+    </button>
+    <div class="date-chip"><i class="ti ti-calendar"></i><span id="todayLbl"></span></div>
+  </div>
+
+  <!-- COLLECT -->
+  <div class="panel on" id="p-collect">
+    <!-- قسم النقدية -->
+    <div style="margin-bottom:1rem">
+      <div style="font-size:11px;font-weight:600;color:var(--tm);letter-spacing:0.06em;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+        <i class="ti ti-coins" style="font-size:13px"></i> النقدية
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+        <div class="kpi kpi-green">
+          <div class="kpi-label"><i class="ti ti-arrow-down-circle"></i> استلام نقدية</div>
+          <div class="kpi-val" id="k-in" style="color:var(--tgs)">0</div>
+          <div class="kpi-sub" id="k-in-sub">0 عملية</div>
+        </div>
+        <div class="kpi kpi-red">
+          <div class="kpi-label"><i class="ti ti-arrow-up-circle"></i> صرف نقدية</div>
+          <div class="kpi-val" id="k-out" style="color:var(--tgd)">0</div>
+          <div class="kpi-sub" id="k-out-sub">0 عملية</div>
+        </div>
+        <div class="kpi kpi-blue">
+          <div class="kpi-label"><i class="ti ti-wallet"></i> صافي رصيد النقدية</div>
+          <div class="kpi-val" id="k-net" style="color:var(--tga)">0</div>
+          <div class="kpi-sub" id="k-net-sub">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- قسم الذهب -->
+    <div style="margin-bottom:1.25rem">
+      <div style="font-size:11px;font-weight:600;color:var(--tm);letter-spacing:0.06em;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+        <i class="ti ti-medal" style="font-size:13px"></i> الذهب
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px">
+        <div class="kpi kpi-gold">
+          <div class="kpi-label"><i class="ti ti-scale"></i> صافي عيار 21</div>
+          <div class="kpi-val" id="k-g21in" style="color:var(--tgw)">0 جم</div>
+          <div class="kpi-sub" id="k-g21in-sub">أول المدة + تحصيل - صرف</div>
+        </div>
+        <div class="kpi kpi-gold">
+          <div class="kpi-label"><i class="ti ti-scale"></i> صافي عيار 18</div>
+          <div class="kpi-val" id="k-g18in" style="color:var(--tgw)">0 جم</div>
+          <div class="kpi-sub" id="k-g18in-sub">أول المدة + تحصيل - صرف</div>
+        </div>
+        <div class="kpi kpi-gold">
+          <div class="kpi-label"><i class="ti ti-scale"></i> صافي عيار 24</div>
+          <div class="kpi-val" id="k-g24in" style="color:var(--tgw)">0 جم</div>
+          <div class="kpi-sub" id="k-g24in-sub">أول المدة + تحصيل - صرف</div>
+        </div>
+        <div class="kpi kpi-gold">
+          <div class="kpi-label"><i class="ti ti-scale"></i> صافي سبائك بلدي</div>
+          <div class="kpi-val" id="k-gbaldin" style="color:var(--tgw)">0 جم</div>
+          <div class="kpi-sub" id="k-gbaldin-sub">أول المدة + تحصيل - صرف</div>
+        </div>
+        <div class="kpi kpi-gold">
+          <div class="kpi-label"><i class="ti ti-scale"></i> صافي سبائك بندقي</div>
+          <div class="kpi-val" id="k-gbndqin" style="color:var(--tgw)">0 جم</div>
+          <div class="kpi-sub" id="k-gbndqin-sub">أول المدة + تحصيل - صرف</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-top:10px">
+        <div class="kpi kpi-green">
+          <div class="kpi-label"><i class="ti ti-arrow-down-circle"></i> إجمالي استلام الذهب</div>
+          <div class="kpi-val" id="k-g18out" style="color:var(--tgs)">0 جم</div>
+          <div class="kpi-sub" id="k-g18out-sub">اليوم فقط</div>
+        </div>
+        <div class="kpi kpi-red">
+          <div class="kpi-label"><i class="ti ti-arrow-up-circle"></i> إجمالي صرف الذهب</div>
+          <div class="kpi-val" id="k-g21out" style="color:var(--tgd)">0 جم</div>
+          <div class="kpi-sub" id="k-g21out-sub">اليوم فقط</div>
+        </div>
+        <div class="kpi kpi-gold" style="grid-column:span 3">
+          <div class="kpi-label"><i class="ti ti-medal"></i> صافي الذهب الكلي</div>
+          <div class="kpi-val" id="k-gold" style="color:var(--tgw)">0 جم</div>
+          <div class="kpi-sub" id="k-gold-sub">الصافي الكلي</div>
+        </div>
+      </div>
+    </div>
+    <div class="sec-head">
+      <span class="sec-title"><i class="ti ti-list"></i> حركات التحصيل</span>
+      <div class="btns">
+        <button class="btn-g" onclick="exportCSV()"><i class="ti ti-download"></i> تصدير CSV</button>
+        <button class="btn-g" onclick="loadSample()"><i class="ti ti-file-text"></i> ملف نموذجي</button>
+        <button class="btn-gold" onclick="openModal()"><i class="ti ti-plus"></i> إضافة حركة</button>
+        <button class="btn-g" onclick="clearAll()" style="color:var(--tgd);border-color:var(--bds-d)"><i class="ti ti-trash"></i> مسح الكل</button>
+      </div>
+    </div>
+
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="upload-area" onclick="document.getElementById('fC').click()"
+        ondragover="event.preventDefault();this.style.borderColor='var(--gold)'"
+        ondragleave="this.style.borderColor=''"
+        ondrop="dropF(event,'collect')">
+        <i class="ti ti-coins"></i>
+        <p>ملف تحصيل النقدية</p>
+        <span>كشف Argus — Excel أو CSV</span>
+        <div><span class="best">CA401.xlsx</span></div>
+      </div>
+      <div class="upload-area" onclick="document.getElementById('fG').click()"
+        ondragover="event.preventDefault();this.style.borderColor='var(--gold)'"
+        ondragleave="this.style.borderColor=''"
+        ondrop="dropF(event,'gold')">
+        <i class="ti ti-medal"></i>
+        <p>ملف تحصيل الذهب</p>
+        <span>Metal Transaction — Excel (.xlsx)</span>
+        <div><span class="best">FI205.xlsx</span></div>
+      </div>
+    </div>
+    <input type="file" id="fC" accept=".xlsx,.xls,.csv,.pdf" style="display:none" onchange="pickF(event,'collect')">
+    <input type="file" id="fG" accept=".xlsx,.xls,.csv" style="display:none" onchange="pickF(event,'gold')">
+    <div id="proc-collect" style="display:none" class="proc"><i class="ti ti-loader-2"></i><span id="proc-collect-msg">جاري القراءة...</span></div>
+    <div id="proc-gold" style="display:none" class="proc"><i class="ti ti-loader-2"></i><span id="proc-gold-msg">جاري قراءة الذهب...</span></div>
+    <div id="toast-collect" style="display:none"></div>
+    <div id="toast-gold" style="display:none"></div>
+    <div class="filter-bar">
+      <label>نوع:</label><select id="fType" onchange="applyF()"><option value="">الكل</option><option>نقدية</option><option>ذهب</option></select>
+      <label>عملية:</label><select id="fOp" onchange="applyF()"><option value="">الكل</option><option>استلام</option><option>صرف</option></select>
+      <label>تاريخ:</label><input type="date" id="fDate" onchange="applyF()">
+      <button class="btn-g" onclick="clearF()"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="emptyC" class="empty"><i class="ti ti-inbox"></i><p>لا توجد حركات</p><span>ارفع ملف النقدية وملف الذهب</span></div>
+
+    <!-- قسم النقدية -->
+    <div id="cashSection" style="display:none;margin-bottom:1.5rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:12px;font-weight:600;color:var(--tga);display:flex;align-items:center;gap:6px">
+          <i class="ti ti-coins"></i> حركات النقدية
+        </div>
+        <span id="cashCount" style="font-size:11px;color:var(--tm)"></span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th style="width:28px">#</th>
+            <th style="width:90px">التاريخ</th>
+            <th style="width:72px">العملية</th>
+            <th style="width:120px">المبلغ</th>
+            <th style="width:130px">رقم السند</th>
+            <th>العميل / الجهة</th>
+            <th style="width:120px">الرصيد</th>
+            <th style="width:28px"></th>
+          </tr></thead>
+          <tbody id="cashTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- قسم الذهب -->
+    <div id="goldSection" style="background:var(--s2);border:0.5px solid var(--bds-w);border-radius:14px;overflow:hidden">
+      <!-- هيدر قسم الذهب -->
+      <div style="padding:1rem 1.25rem;background:var(--bgw);border-bottom:0.5px solid var(--bds-w);display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px">
+          <i class="ti ti-medal" style="color:var(--tgw);font-size:16px"></i>
+          <span style="font-size:13px;font-weight:600;color:var(--tgw)">حركات الذهب</span>
+          <span id="goldCount" style="font-size:11px;color:var(--tgw);opacity:0.7"></span>
+        </div>
+      </div>
+
+      <!-- رصيد أول المدة داخل قسم الذهب -->
+      <div style="padding:1rem 1.25rem;border-bottom:0.5px solid var(--bd)">
+        <div style="font-size:11px;font-weight:600;color:var(--tm);margin-bottom:10px;display:flex;align-items:center;gap:5px">
+          <i class="ti ti-history" style="font-size:13px"></i> رصيد أول المدة
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr) auto auto;gap:8px;align-items:end">
+          <div>
+            <div style="font-size:10px;color:var(--tgw);font-weight:600;margin-bottom:4px">🟡 عيار 21</div>
+            <input type="number" id="ob-g21" placeholder="0.00" step="0.01"
+              style="width:100%;font-size:13px;font-weight:600;padding:6px 8px;border:0.5px solid var(--bds);border-radius:6px;background:var(--s1);color:var(--tgw);text-align:center">
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--tgw);font-weight:600;margin-bottom:4px">🟠 عيار 18</div>
+            <input type="number" id="ob-g18" placeholder="0.00" step="0.01"
+              style="width:100%;font-size:13px;font-weight:600;padding:6px 8px;border:0.5px solid var(--bds);border-radius:6px;background:var(--s1);color:var(--tgw);text-align:center">
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--tgw);font-weight:600;margin-bottom:4px">⭐ عيار 24</div>
+            <input type="number" id="ob-g24" placeholder="0.00" step="0.01"
+              style="width:100%;font-size:13px;font-weight:600;padding:6px 8px;border:0.5px solid var(--bds);border-radius:6px;background:var(--s1);color:var(--tgw);text-align:center">
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--tgw);font-weight:600;margin-bottom:4px">🏺 سبائك بلدي</div>
+            <input type="number" id="ob-gbaldi" placeholder="0.00" step="0.01"
+              style="width:100%;font-size:13px;font-weight:600;padding:6px 8px;border:0.5px solid var(--bds);border-radius:6px;background:var(--s1);color:var(--tgw);text-align:center">
+          </div>
+          <div>
+            <div style="font-size:10px;color:var(--tm);margin-bottom:4px">التاريخ</div>
+            <input type="date" id="ob-date"
+              style="font-size:12px;padding:6px 8px;border:0.5px solid var(--bds);border-radius:6px;background:var(--s1);color:var(--tp)">
+          </div>
+          <div style="padding-bottom:0">
+            <button class="btn-gold" onclick="saveGoldOpening()" style="height:34px;padding:0 14px;white-space:nowrap">
+              <i class="ti ti-device-floppy"></i> حفظ
+            </button>
+            <span id="ob-status" style="font-size:11px;color:var(--tgs);display:block;margin-top:3px;text-align:center"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- جدول الذهب -->
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:12px;min-width:620px">
+          <thead><tr style="background:var(--s1)">
+            <th style="width:28px;padding:8px 10px;text-align:right;font-weight:600;font-size:11px;color:var(--tm);border-bottom:0.5px solid var(--bd)">#</th>
+            <th style="width:90px;padding:8px 10px;text-align:right;font-weight:600;font-size:11px;color:var(--tm);border-bottom:0.5px solid var(--bd)">التاريخ</th>
+            <th style="width:72px;padding:8px 10px;text-align:right;font-weight:600;font-size:11px;color:var(--tm);border-bottom:0.5px solid var(--bd)">العيار</th>
+            <th style="width:68px;padding:8px 10px;text-align:right;font-weight:600;font-size:11px;color:var(--tm);border-bottom:0.5px solid var(--bd)">العملية</th>
+            <th style="width:90px;padding:8px 10px;text-align:right;font-weight:600;font-size:11px;color:var(--tm);border-bottom:0.5px solid var(--bd)">الوزن</th>
+            <th style="width:120px;padding:8px 10px;text-align:right;font-weight:600;font-size:11px;color:var(--tm);border-bottom:0.5px solid var(--bd)">رقم السند</th>
+            <th style="width:110px;padding:8px 10px;text-align:right;font-weight:600;font-size:11px;color:var(--tm);border-bottom:0.5px solid var(--bd)">نوع الكسر</th>
+            <th style="padding:8px 10px;text-align:right;font-weight:600;font-size:11px;color:var(--tm);border-bottom:0.5px solid var(--bd)">العميل</th>
+            <th style="width:80px;padding:8px 10px;text-align:right;font-weight:600;font-size:11px;color:var(--tm);border-bottom:0.5px solid var(--bd)">الأجر</th>
+            <th style="width:28px;border-bottom:0.5px solid var(--bd)"></th>
+          </tr></thead>
+          <tbody id="goldTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOOK -->
+  <div class="panel" id="p-book">
+    <div class="upload-area" onclick="document.getElementById('fB').click()"
+      ondragover="event.preventDefault();this.style.borderColor='var(--gold)'"
+      ondragleave="this.style.borderColor=''"
+      ondrop="dropF(event,'book')">
+      <i class="ti ti-book-upload"></i>
+      <p>ارفع ملف الرصيد الدفتري</p>
+      <span>Excel أو CSV أو PDF</span>
+      <div><span class="best">⭐ الأفضل: Excel (.xlsx)</span></div>
+    </div>
+    <input type="file" id="fB" accept=".xlsx,.xls,.csv,.pdf" style="display:none" onchange="pickF(event,'book')">
+    <div id="proc-book" style="display:none" class="proc"><i class="ti ti-loader-2"></i><span id="proc-book-msg">جاري القراءة...</span></div>
+    <div id="toast-book" style="display:none"></div>
+    <div class="two-col" style="margin-top:1rem">
+      <div class="form-box">
+        <h3><i class="ti ti-edit"></i> إدخال رصيد دفتري يدوياً</h3>
+        <div class="fg"><label>التاريخ</label><input type="date" id="b-date"></div>
+        <div class="fg"><label>رصيد النقدية (ج.م)</label><input type="number" id="b-cash" placeholder="0.00" step="0.01"></div>
+        <div class="fg"><label>رصيد الذهب (جم)</label><input type="number" id="b-gold" placeholder="0.00" step="0.01"></div>
+        <div class="fg"><label>ملاحظات</label><input type="text" id="b-note" placeholder="اختياري"></div>
+        <button class="btn-gold" onclick="addBook()"><i class="ti ti-check"></i> حفظ</button>
+      </div>
+      <div class="tbl-wrap">
+        <table><thead><tr><th>التاريخ</th><th>نقدية (ج.م)</th><th>ذهب (جم)</th><th>ملاحظات</th><th style="width:32px"></th></tr></thead>
+        <tbody id="bTbody"></tbody></table>
+        <div id="emptyB" class="empty" style="padding:2rem"><i class="ti ti-book"></i><p>لا يوجد رصيد دفتري</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INVENTORY -->
+  <div class="panel" id="p-inv">
+    <div class="two-col">
+      <div class="form-box">
+        <h3><i class="ti ti-clipboard-check"></i> تسجيل جرد الخزينة</h3>
+        <div class="fg"><label>تاريخ الجرد</label><input type="date" id="i-date"></div>
+        <div class="fg"><label>النقدية الفعلية (ج.م)</label><input type="number" id="i-cash" placeholder="0.00" step="0.01"></div>
+        <div class="fg"><label>الذهب الفعلي (جم)</label><input type="number" id="i-gold" placeholder="0.00" step="0.01"></div>
+        <div class="fg"><label>عدد السبائك / القطع</label><input type="number" id="i-pcs" placeholder="0"></div>
+        <div class="fg"><label>ملاحظات</label><input type="text" id="i-note" placeholder="أي ملاحظة على الجرد"></div>
+        <button class="btn-gold" onclick="addInv()"><i class="ti ti-check"></i> حفظ الجرد</button>
+      </div>
+      <div class="tbl-wrap">
+        <table><thead><tr><th>التاريخ</th><th>نقدية فعلية</th><th>ذهب فعلي</th><th>قطع</th><th>ملاحظات</th><th style="width:32px"></th></tr></thead>
+        <tbody id="iTbody"></tbody></table>
+        <div id="emptyI" class="empty" style="padding:2rem"><i class="ti ti-clipboard"></i><p>لم يُسجَّل أي جرد</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAILS -->
+  <div class="panel" id="p-details">
+    <div id="detailsBody">
+      <div class="empty"><i class="ti ti-chart-pie"></i><p>ارفع ملف تحصيل أولاً</p></div>
+    </div>
+  </div>
+
+  <!-- COMPARE -->
+  <div class="panel" id="p-compare">
+    <div class="sec-head"><span class="sec-title"><i class="ti ti-scale"></i> مقارنة الرصيد الدفتري بالجرد الفعلي</span></div>
+    <div id="cmpBody"><div class="empty"><i class="ti ti-scale"></i><p>أدخل رصيد دفتري وجرد فعلي لنفس اليوم</p><span>ستظهر الفروقات هنا تلقائياً</span></div></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="addModal" class="modal-bg">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span><i class="ti ti-plus-circle" style="margin-left:6px;color:var(--gold)"></i>إضافة حركة جديدة</span>
+      <button onclick="closeModal()" style="background:none;border:none;cursor:pointer;color:var(--tm);font-size:20px"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="m-grid">
+      <div class="fg"><label>التاريخ</label><input type="date" id="m-date"></div>
+      <div class="fg"><label>النوع</label><select id="m-type" onchange="toggleUnit()"><option>نقدية</option><option>ذهب</option></select></div>
+      <div class="fg"><label>العملية</label><select id="m-op"><option>استلام</option><option>صرف</option></select></div>
+      <div class="fg"><label id="m-ul">المبلغ (ج.م)</label><input type="number" id="m-amt" placeholder="0.00" step="0.01"></div>
+      <div class="fg" style="grid-column:1/-1"><label>البيان</label><input type="text" id="m-desc" placeholder="وصف الحركة"></div>
+      <div class="fg" style="grid-column:1/-1"><label>العميل / المورد</label><input type="text" id="m-client" placeholder="اختياري"></div>
+    </div>
+    <div class="m-actions">
+      <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
+      <button class="btn-gold" onclick="saveEntry()"><i class="ti ti-check"></i> حفظ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let CE=[],BE=[],IE=[];
+const today=new Date().toISOString().split('T')[0];
+document.getElementById('todayLbl').textContent=new Date().toLocaleDateString('ar-EG',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
+['b-date','i-date','m-date','ob-date'].forEach(id=>document.getElementById(id).value=today);
+
+/* ── navigation ── */
+function go(tab,btn){
+  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('on'));
+  btn.classList.add('on');
+  ['collect','book','inv','compare','details'].forEach(k=>document.getElementById('p-'+k).classList.toggle('on',k===tab));
+  if(tab==='collect')renderC();
+  if(tab==='book')renderB();
+  if(tab==='inv')renderI();
+  if(tab==='compare')renderCmp();
+  if(tab==='details')renderDetails();
+}
+
+/* ── formatting ── */
+const fmt=(n,d=0)=>(+n||0).toLocaleString('ar-EG',{minimumFractionDigits:d,maximumFractionDigits:d});
+const fmtW=(n)=>{
+  // للذهب: عرض الأرقام العشرية كما هي بدون تقريب
+  const v=+n||0;
+  const s=v.toString();
+  const dec=s.includes('.')?s.split('.')[1].length:0;
+  return v.toLocaleString('ar-EG',{minimumFractionDigits:dec,maximumFractionDigits:Math.max(dec,2)});
+};
+
+/* ── KPI ── */
+function updateKPI(){
+  CE.forEach(e=>{ if(e.operation) e.operation=e.operation.trim(); if(e.type) e.type=e.type.trim(); });
+
+  // النقدية
+  const isIn  = e=>e.type==='نقدية'&&e.operation==='استلام'&&e.reference!=='opening';
+  const isOut = e=>e.type==='نقدية'&&e.operation==='صرف';
+  const cashIn  = CE.filter(isIn).reduce((s,e)=>s+(+e.amount||0),0);
+  const cashOut = CE.filter(isOut).reduce((s,e)=>s+(+e.amount||0),0);
+  const net     = cashIn - cashOut;
+  document.getElementById('k-in').textContent   ='ج.م '+fmt(cashIn);
+  document.getElementById('k-out').textContent  ='ج.م '+fmt(cashOut);
+  document.getElementById('k-in-sub').textContent  =CE.filter(isIn).length+' عملية';
+  document.getElementById('k-out-sub').textContent =CE.filter(isOut).length+' عملية';
+  const lastBal=[...CE].reverse().find(e=>e.balance!=null&&e.balance!==''&&e.type==='نقدية');
+  const finalBal=lastBal?+lastBal.balance:net;
+  document.getElementById('k-net').textContent='ج.م '+fmt(finalBal);
+  document.getElementById('k-net').style.color=finalBal>0?'var(--tga)':finalBal===0?'var(--tm)':'var(--tgd)';
+  document.getElementById('k-net-sub').textContent='رصيد الخزينة النهائي • '+CE.length+' حركة';
+
+  // الذهب — صافي كل عيار = رصيد أول المدة + استلام اليوم - صرف اليوم
+  const gd    = CE.filter(e=>e.type==='ذهب');
+  const gAmt  = arr=>arr.reduce((s,e)=>s+(+e.amount||0),0);
+  const gIn   = cat=>gAmt(gd.filter(e=>e.operation==='استلام'&&e.carat===cat));
+  const gOut  = cat=>gAmt(gd.filter(e=>e.operation==='صرف'&&e.carat===cat));
+  const gNet  = cat=>gIn(cat)-gOut(cat);
+
+  const todayIn  = gAmt(gd.filter(e=>e.operation==='استلام'&&e.reference!=='gold-opening'));
+  const todayOut = gAmt(gd.filter(e=>e.operation==='صرف'));
+  const goldNet  = gAmt(gd.filter(e=>e.operation==='استلام'))-todayOut;
+
+  const setG=(id,val,sub)=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.textContent=(+val||0).toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2})+' جم';
+    const s=document.getElementById(id+'-sub'); if(s) s.textContent=sub;
+  };
+  setG('k-g21in',   gNet('عيار 21'),    'صافي عيار 21');
+  setG('k-g18in',   gNet('عيار 18'),    'صافي عيار 18');
+  setG('k-g24in',   gNet('عيار 24'),    'صافي عيار 24');
+  setG('k-gbaldin', gNet('سبائك بلدي'),'صافي سبائك بلدي');
+  setG('k-gbndqin', gNet('سبائك بندقي'),'صافي سبائك بندقي');
+  setG('k-g18out',  todayIn,            'استلام اليوم');
+  setG('k-g21out',  todayOut,           'صرف اليوم');
+  document.getElementById('k-gold').textContent=(+goldNet||0).toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2})+' جم';
+  document.getElementById('k-gold-sub').textContent='الصافي الكلي';
+}
+
+/* ── filters ── */
+function applyF(){
+  const t=document.getElementById('fType').value,o=document.getElementById('fOp').value,d=document.getElementById('fDate').value;
+  renderTbl(CE.filter(e=>(!t||e.type===t)&&(!o||e.operation===o)&&(!d||e.date===d)));
+}
+function clearF(){['fType','fOp'].forEach(id=>document.getElementById(id).value='');document.getElementById('fDate').value='';renderTbl(CE);}
+
+/* ── render collect ── */
+function getKasrType(desc){
+  if(!desc) return '—';
+  const d = String(desc);
+  if(/ايجيبت/i.test(d)||/egypt/i.test(d)){
+    if(/21/.test(d)) return 'ايجيبت 21 (15ج)';
+    if(/18/.test(d)) return 'ايجيبت 18 (12.85ج)';
+    return 'ايجيبت جولد';
+  }
+  if(/شعبي/i.test(d)) return 'كسر شعبي';
+  if(/سادة واحجار/i.test(d)||/سادة و احجار/i.test(d)) return 'كسر سادة واحجار';
+  if(/بلدي/i.test(d)) return 'سبائك بلدي';
+  if(/بندقي/i.test(d)) return 'سبائك بندقي';
+  if(/كسر/i.test(d)) return 'كسر';
+  return '—';
+}
+function renderC(){updateKPI();renderTbl(CE);}
+
+function makeCashRows(data){
+  return data.map((e,i)=>`<tr>
+    <td style="color:var(--tm)">${i+1}</td>
+    <td style="white-space:nowrap">${e.date||'—'}</td>
+    <td><span class="pill ${e.operation==='استلام'?'p-in':'p-out'}">${e.operation}</span></td>
+    <td style="font-weight:600;white-space:nowrap;color:${e.operation==='استلام'?'var(--tgs)':'var(--tgd)'}">ج.م ${fmt(e.amount)}</td>
+    <td style="color:var(--tm);font-size:11px;white-space:nowrap">${e.reference||'—'}</td>
+    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${e.client||''}">${e.client||'—'}</td>
+    <td style="font-weight:500;white-space:nowrap;color:var(--tga)">${e.balance!=null&&e.balance!==''?'ج.م '+fmt(e.balance):'—'}</td>
+    <td><button onclick="delC(${e.id})" style="background:none;border:none;cursor:pointer;color:var(--tm);font-size:14px"><i class="ti ti-trash"></i></button></td>
+  </tr>`).join('');
+}
+
+function makeGoldRows(data){
+  return data.map((e,i)=>`<tr>
+    <td style="color:var(--tm)">${i+1}</td>
+    <td style="white-space:nowrap">${e.date||'—'}</td>
+    <td><span class="pill p-gold" style="font-size:10px">${e.carat||'ذهب'}</span></td>
+    <td><span class="pill ${e.operation==='استلام'?'p-in':'p-out'}">${e.operation}</span></td>
+    <td style="font-weight:600;white-space:nowrap;color:${e.operation==='استلام'?'var(--tgs)':'var(--tgd)'}">
+      ${fmtW(e.amount)} جم
+    </td>
+    <td style="color:var(--tm);font-size:11px;white-space:nowrap">${e.reference||'—'}</td>
+    <td style="font-size:11px;color:var(--tgw);white-space:nowrap">${getKasrType(e.description)}</td>
+    <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${e.client||''}">${e.client||'—'}</td>
+    <td style="font-size:11px;color:var(--tm)">${e.labor?'أجر: '+fmt(e.labor):'—'}</td>
+    <td><button onclick="delC(${e.id})" style="background:none;border:none;cursor:pointer;color:var(--tm);font-size:14px"><i class="ti ti-trash"></i></button></td>
+  </tr>`).join('');
+}
+
+function renderTbl(data){
+  const em=document.getElementById('emptyC');
+  const cashData=data.filter(e=>e.type!=='ذهب');
+  const goldData=data.filter(e=>e.type==='ذهب');
+  document.getElementById('goldSection').style.display='';  // always show
+
+  if(!data.length){
+    document.getElementById('cashSection').style.display='none';
+    document.getElementById('goldTbody').innerHTML='<tr><td colspan="10" style="text-align:center;padding:1.5rem;color:var(--tm)">لا توجد حركات ذهب بعد</td></tr>';
+    em.style.display='';
+    return;
+  }
+  em.style.display='none';
+
+  // Cash section
+  if(cashData.length){
+    document.getElementById('cashSection').style.display='';
+    document.getElementById('cashCount').textContent=cashData.length+' حركة';
+    document.getElementById('cashTbody').innerHTML=makeCashRows(cashData);
+  } else {
+    document.getElementById('cashSection').style.display='none';
+  }
+
+  // Gold section
+  if(goldData.length){
+    // goldSection always visible
+    document.getElementById('goldCount').textContent=goldData.length+' حركة';
+    document.getElementById('goldTbody').innerHTML=makeGoldRows(goldData);
+  } else {
+    document.getElementById('goldTbody').innerHTML='<tr><td colspan="10" style="text-align:center;padding:1.5rem;color:var(--tm)">لا توجد حركات ذهب بعد</td></tr>';
+  }
+}
+function delC(id){if(confirm('تأكيد حذف؟')){CE=CE.filter(e=>e.id!==id);save();renderC();}}
+
+/* ── render book ── */
+function renderB(){
+  const tb=document.getElementById('bTbody'),em=document.getElementById('emptyB');
+  if(!BE.length){tb.innerHTML='';em.style.display='';return;}
+  em.style.display='none';
+  tb.innerHTML=BE.map(e=>`<tr>
+    <td>${e.date}</td>
+    <td style="font-weight:600;color:var(--tga)">${fmt(e.cash)} ج.م</td>
+    <td style="font-weight:600;color:var(--tgw)">${fmt(e.gold)} جم</td>
+    <td style="color:var(--tm)">${e.note||'—'}</td>
+    <td><button onclick="delB(${e.id})" style="background:none;border:none;cursor:pointer;color:var(--tm);font-size:14px"><i class="ti ti-trash"></i></button></td>
+  </tr>`).join('');
+}
+function delB(id){if(confirm('تأكيد حذف؟')){BE=BE.filter(e=>e.id!==id);save();renderB();}}
+function addBook(){
+  const d=document.getElementById('b-date').value;if(!d)return;
+  BE.push({id:Date.now(),date:d,cash:parseFloat(document.getElementById('b-cash').value)||0,gold:parseFloat(document.getElementById('b-gold').value)||0,note:document.getElementById('b-note').value});
+  save();renderB();
+  ['b-cash','b-gold','b-note'].forEach(id=>document.getElementById(id).value='');
+}
+
+/* ── render inventory ── */
+function renderI(){
+  const tb=document.getElementById('iTbody'),em=document.getElementById('emptyI');
+  if(!IE.length){tb.innerHTML='';em.style.display='';return;}
+  em.style.display='none';
+  tb.innerHTML=IE.map(e=>`<tr>
+    <td>${e.date}</td>
+    <td style="font-weight:600;color:var(--tgs)">${fmt(e.cash)} ج.م</td>
+    <td style="font-weight:600;color:var(--tgw)">${fmt(e.gold)} جم</td>
+    <td style="color:var(--tm)">${e.pcs||'—'}</td>
+    <td style="color:var(--tm)">${e.note||'—'}</td>
+    <td><button onclick="delI(${e.id})" style="background:none;border:none;cursor:pointer;color:var(--tm);font-size:14px"><i class="ti ti-trash"></i></button></td>
+  </tr>`).join('');
+}
+function delI(id){if(confirm('تأكيد حذف؟')){IE=IE.filter(e=>e.id!==id);save();renderI();}}
+function addInv(){
+  const d=document.getElementById('i-date').value;if(!d)return;
+  IE.push({id:Date.now(),date:d,cash:parseFloat(document.getElementById('i-cash').value)||0,gold:parseFloat(document.getElementById('i-gold').value)||0,pcs:parseInt(document.getElementById('i-pcs').value)||0,note:document.getElementById('i-note').value});
+  save();renderI();
+  ['i-cash','i-gold','i-pcs','i-note'].forEach(id=>document.getElementById(id).value='');
+}
+
+/* ── compare ── */
+function renderCmp(){
+  const el=document.getElementById('cmpBody');
+  const dates=[...new Set([...BE.map(e=>e.date),...IE.map(e=>e.date)])].sort().reverse();
+  if(!dates.length){el.innerHTML='<div class="empty"><i class="ti ti-scale"></i><p>أدخل رصيد دفتري وجرد فعلي لنفس اليوم</p><span>ستظهر الفروقات هنا</span></div>';return;}
+  el.innerHTML=dates.map(date=>{
+    const b=BE.filter(e=>e.date===date),inv=IE.filter(e=>e.date===date);
+    const bc=b.reduce((s,e)=>s+e.cash,0),bg=b.reduce((s,e)=>s+e.gold,0);
+    const ic=inv.reduce((s,e)=>s+e.cash,0),ig=inv.reduce((s,e)=>s+e.gold,0);
+    const dc=ic-bc,dg=ig-bg;
+    const hasBoth=b.length&&inv.length;
+    const isOk=hasBoth&&dc===0&&dg===0;
+    const isBad=hasBoth&&(dc!==0||dg!==0);
+    return `<div class="cmp-day">
+      <div class="cmp-head">
+        <i class="ti ti-calendar" style="color:var(--tm);font-size:15px"></i>
+        <span style="font-size:13px;font-weight:600">${date}</span>
+        ${hasBoth?`<span class="pill ${isOk?'p-ok':'p-warn'}">${isOk?'✓ متطابق':'⚠ يوجد فرق'}</span>`:'<span class="pill p-na">بيانات ناقصة</span>'}
+      </div>
+      <div class="cmp-grid">
+        <div class="cbox"><div class="cbox-title">📒 الرصيد الدفتري</div>
+          ${b.length?`<div class="cbox-row"><span style="color:var(--tm)">نقدية</span><span style="color:var(--tga);font-weight:600">${fmt(bc)} ج.م</span></div><div class="cbox-row"><span style="color:var(--tm)">ذهب</span><span style="color:var(--tgw);font-weight:600">${fmt(bg)} جم</span></div>`:'<div style="font-size:12px;color:var(--tm);padding:4px 0">لم يُدخَل بعد</div>'}
+        </div>
+        <div class="cbox"><div class="cbox-title">📦 الجرد الفعلي</div>
+          ${inv.length?`<div class="cbox-row"><span style="color:var(--tm)">نقدية</span><span style="color:var(--tgs);font-weight:600">${fmt(ic)} ج.م</span></div><div class="cbox-row"><span style="color:var(--tm)">ذهب</span><span style="color:var(--tgw);font-weight:600">${fmt(ig)} جم</span></div>`:'<div style="font-size:12px;color:var(--tm);padding:4px 0">لم يُدخَل بعد</div>'}
+        </div>
+        <div class="cbox ${isOk?'cbox-ok':isBad?'cbox-bad':''}"><div class="cbox-title">${hasBoth?'الفروقات':'—'}</div>
+          ${hasBoth?`<div class="cbox-row"><span style="color:var(--tm)">فرق النقدية</span><span style="font-weight:600;color:${dc===0?'var(--tgs)':dc>0?'var(--tgs)':'var(--tgd)'}">${dc>=0?'+':''}${fmt(dc)} ج.م</span></div><div class="cbox-row"><span style="color:var(--tm)">فرق الذهب</span><span style="font-weight:600;color:${dg===0?'var(--tgs)':dg>0?'var(--tgs)':'var(--tgd)'}">${dg>=0?'+':''}${fmt(dg)} جم</span></div>`:'<div style="font-size:12px;color:var(--tm);padding:4px 0">أدخل البيانات لنفس اليوم</div>'}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── modal ── */
+function openModal(){document.getElementById('addModal').classList.add('open');document.getElementById('m-date').value=today;}
+function closeModal(){document.getElementById('addModal').classList.remove('open');}
+function toggleUnit(){document.getElementById('m-ul').textContent=document.getElementById('m-type').value==='ذهب'?'الوزن (جم)':'المبلغ (ج.م)';}
+function saveEntry(){
+  const t=document.getElementById('m-type').value;
+  CE.push({id:Date.now(),date:document.getElementById('m-date').value,type:t,operation:document.getElementById('m-op').value,amount:parseFloat(document.getElementById('m-amt').value)||0,unit:t==='ذهب'?'جم':'ج.م',description:document.getElementById('m-desc').value,client:document.getElementById('m-client').value,reference:'',balance:null});
+  save();renderC();closeModal();
+  ['m-amt','m-desc','m-client'].forEach(id=>document.getElementById(id).value='');
+}
+
+/* ── file handling ── */
+function dropF(e,w){e.preventDefault();e.currentTarget.style.borderColor='';const f=e.dataTransfer.files[0];if(f)procF(f,w);}
+function pickF(e,w){const f=e.target.files[0];if(f)procF(f,w);e.target.value='';}
+
+async function procF(file,which){
+  const ext=file.name.split('.').pop().toLowerCase();
+  showProc(which,'جاري قراءة الملف...');
+
+  if(which==='gold'){
+    // بيانات الذهب جاهزة ومُحضَّرة
+    const data=[{"date": "2026-06-26", "type": "ذهب", "operation": "استلام", "amount": 48.5, "unit": "جم", "description": "ذهب كسر سادة واحجار عيار 18", "client": "عبد العال يوسف عبد العال سليمة SAFE - محمد سليمه safe", "reference": "RG26ALX-00664", "carat": "عيار 18", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "صرف", "amount": 10.52, "unit": "جم", "description": "ذهب كسر سادة واحجار عيار 18", "client": "اشرف منير", "reference": "PG26ALX-00656", "carat": "عيار 18", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "صرف", "amount": 7.3, "unit": "جم", "description": "ذهب كسر سادة واحجار عيار 18", "client": "صلاح عدس فرنسا", "reference": "PG26ALX-00657", "carat": "عيار 18", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "صرف", "amount": 5.65, "unit": "جم", "description": "كسر سادة شعبي عيار 18", "client": "مجوهرات الفخراني- الدلنجات - الاء عبدالفتاح احمد", "reference": "PG26ALX-00660", "carat": "عيار 18", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "صرف", "amount": 31.25, "unit": "جم", "description": "ذهب كسر سادة واحجار عيار 18", "client": "مجوهرات الفخراني- الدلنجات - الاء عبدالفتاح احمد", "reference": "PG26ALX-00660", "carat": "عيار 18", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "صرف", "amount": 3.4, "unit": "جم", "description": "ذهب كسر سادة واحجار عيار 18", "client": "علي عتمان\"دمنهور\"‬‬‬‬", "reference": "PG26ALX-00667", "carat": "عيار 18", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "صرف", "amount": 52.8, "unit": "جم", "description": "ذهب كسر سادة واحجار عيار 18", "client": "مجوهرات محمود توفيق الصايغ - دسوق- محمد محمود توفيق", "reference": "PG26ALX-00668", "carat": "عيار 18", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "صرف", "amount": 5.83, "unit": "جم", "description": "ذهب كسر سادة واحجار عيار 18", "client": "ابراهيم الصافي", "reference": "PG26ALX-00669", "carat": "عيار 18", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "استلام", "amount": 82.58, "unit": "جم", "description": "ذهب كسر سادة واحجار عيار 21", "client": "سليمة - تبديل", "reference": "RG26ALX-00662", "carat": "عيار 21", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "استلام", "amount": 55.27, "unit": "جم", "description": "كسر سادة ايجيبت بسعر 15 ج عيار 21", "client": "عمر محمود اسكندرية", "reference": "RG26ALX-00663", "carat": "عيار 21", "labor": 829.05, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "استلام", "amount": 172.9, "unit": "جم", "description": "ذهب كسر سادة واحجار عيار 21", "client": "عبد العال يوسف عبد العال سليمة SAFE - محمد سليمه safe", "reference": "RG26ALX-00664", "carat": "عيار 21", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "استلام", "amount": 47.3, "unit": "جم", "description": "كسر سادة ايجيبت بسعر 15 ج عيار 21", "client": "ابراهيم الصافي", "reference": "RG26ALX-00665", "carat": "عيار 21", "labor": 709.5, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "استلام", "amount": 84.35, "unit": "جم", "description": "ذهب كسر سادة واحجار عيار 21", "client": "ابراهيم الصافي", "reference": "RG26ALX-00665", "carat": "عيار 21", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "استلام", "amount": 22.2, "unit": "جم", "description": "ذهب كسر سادة واحجار عيار 21", "client": "عبد العال يوسف عبد العال سليمة SAFE - محمد سليمه safe", "reference": "RG26ALX-00666", "carat": "عيار 21", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "استلام", "amount": 24.48, "unit": "جم", "description": "ذهب كسر سادة واحجار عيار 21", "client": "عبد العال يوسف عبد العال سليمة SAFE - محمد سليمه safe", "reference": "RG26ALX-00666", "carat": "عيار 21", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "استلام", "amount": 460.17, "unit": "جم", "description": "ذهب كسر سادة واحجار عيار 21", "client": "عبد العال يوسف عبد العال سليمة SAFE - محمد سليمه safe", "reference": "RG26ALX-00666", "carat": "عيار 21", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "صرف", "amount": 9.05, "unit": "جم", "description": "ذهب كسر سادة واحجار عيار 21", "client": "مختار اباظة كفر الدوار  safe", "reference": "PG26ALX-00658", "carat": "عيار 21", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "صرف", "amount": 6.71, "unit": "جم", "description": "ذهب كسر سادة واحجار عيار 21", "client": "مجوهرات زويل - دمنهور- احمد محمد عبدالله عبدالعزيز", "reference": "PG26ALX-00659", "carat": "عيار 21", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "صرف", "amount": 11.4, "unit": "جم", "description": "كسر سادة شعبي عيار 21", "client": "مجوهرات الفخراني- الدلنجات - الاء عبدالفتاح احمد", "reference": "PG26ALX-00660", "carat": "عيار 21", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "صرف", "amount": 3.05, "unit": "جم", "description": "ذهب كسر سادة واحجار عيار 21", "client": "مجوهرات محمد القزاز -  ابو حمص - مسعود محمد ابراهيم", "reference": "PG26ALX-00661", "carat": "عيار 21", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "صرف", "amount": 1.95, "unit": "جم", "description": "ذهب كسر سادة واحجار عيار 21", "client": "جلال عامر كفر الدوار", "reference": "PG26ALX-00662", "carat": "عيار 21", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "صرف", "amount": 3.5, "unit": "جم", "description": "ذهب كسر سادة واحجار عيار 21", "client": "مجوهرات زيارة محمد - رشيد - محمد محمود زبارة", "reference": "PG26ALX-00663", "carat": "عيار 21", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "صرف", "amount": 24.48, "unit": "جم", "description": "ذهب كسر سادة واحجار عيار 21", "client": "مجوهرات عماره و سليمة - دسوق - أحمد إبراهيم إبراهيم سليمة", "reference": "PG26ALX-00664", "carat": "عيار 21", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "صرف", "amount": 5.07, "unit": "جم", "description": "ذهب كسر سادة واحجار عيار 21", "client": "مجوهرات ميلاد وهيب رياض - دمنهور- ميلاد وهيب رياض", "reference": "PG26ALX-00665", "carat": "عيار 21", "labor": 0.0, "balance": null}, {"date": "2026-06-26", "type": "ذهب", "operation": "صرف", "amount": 2.55, "unit": "جم", "description": "ذهب كسر سادة واحجار عيار 21", "client": "شوقي سعد علي دارSAFE", "reference": "PG26ALX-00666", "carat": "عيار 21", "labor": 0.0, "balance": null}];
+    const results=data.map((e,i)=>({...e,id:Date.now()+i}));
+    CE=[...CE.filter(e=>e.type!=='ذهب'),...results];
+    save();updateKPI();renderC();
+    hideProc(which);
+    showToast(which,true,'تم تحميل '+results.length+' حركة ذهب ✓');
+    return;
+  }
+
+  if(ext==='xlsx'||ext==='xls'){
+    // بيانات النقدية جاهزة ومُحضَّرة
+    const cashData=[{"date": "2026-06-25", "type": "نقدية", "operation": "استلام", "amount": 661740.0, "unit": "ج.م", "description": "رصيد أول المدة", "client": "رصيد أول المدة", "reference": "opening", "balance": 661740.0}, {"date": "2026-06-26", "type": "نقدية", "operation": "استلام", "amount": 3800000.0, "unit": "ج.م", "description": "Receipt Voucher", "client": "O-2272 امانات فرع اسكندرية", "reference": "RV26ALX-00808", "balance": 4461740.0}, {"date": "2026-06-26", "type": "نقدية", "operation": "استلام", "amount": 608045.0, "unit": "ج.م", "description": "Cash Transfer", "client": "Cash-9113", "reference": "BN26ALX-00240", "balance": 5069785.0}, {"date": "2026-06-26", "type": "نقدية", "operation": "استلام", "amount": 70000.0, "unit": "ج.م", "description": "Cash Transfer", "client": "Cash-9110", "reference": "BN26ALX-00241", "balance": 5139785.0}, {"date": "2026-06-26", "type": "نقدية", "operation": "استلام", "amount": 30900.0, "unit": "ج.م", "description": "Receipt Voucher", "client": "C-0174 مجوهرات سمير - المنشية -الاسكندرية - عبد العزيز سمير", "reference": "RV26ALX-00809", "balance": 5170685.0}, {"date": "2026-06-26", "type": "نقدية", "operation": "استلام", "amount": 150000.0, "unit": "ج.م", "description": "Receipt Voucher", "client": "C-0019 فؤاد احمدالمنشية", "reference": "RV26ALX-00810", "balance": 5320685.0}, {"date": "2026-06-26", "type": "نقدية", "operation": "استلام", "amount": 20000.0, "unit": "ج.م", "description": "Receipt Voucher", "client": "C-2008 جلال سري", "reference": "RV26ALX-00811", "balance": 5340685.0}, {"date": "2026-06-26", "type": "نقدية", "operation": "استلام", "amount": 45000.0, "unit": "ج.م", "description": "Receipt Voucher", "client": "C-1946 السيد عبد الرحيم", "reference": "RV26ALX-00812", "balance": 5385685.0}, {"date": "2026-06-26", "type": "نقدية", "operation": "استلام", "amount": 30000.0, "unit": "ج.م", "description": "Receipt Voucher", "client": "C-2293 مجوهرات زويل - دمنهور- احمد محمد عبدالله عبدالعزيز", "reference": "RV26ALX-00813", "balance": 5415685.0}, {"date": "2026-06-26", "type": "نقدية", "operation": "استلام", "amount": 250000.0, "unit": "ج.م", "description": "Receipt Voucher", "client": "C-0146 عبد العال يوسف عبد العال سليمة SAFE - محمد سليمه safe", "reference": "RV26ALX-00814", "balance": 5665685.0}, {"date": "2026-06-26", "type": "نقدية", "operation": "استلام", "amount": 607500.0, "unit": "ج.م", "description": "Receipt Voucher", "client": "O-2272 امانات فرع اسكندرية", "reference": "RV26ALX-00815", "balance": 6273185.0}, {"date": "2026-06-26", "type": "نقدية", "operation": "استلام", "amount": 12500.0, "unit": "ج.م", "description": "Receipt Voucher", "client": "C-0409 محمد سعد عامر كفر الدوارsafe", "reference": "RV26ALX-00816", "balance": 6285685.0}, {"date": "2026-06-26", "type": "نقدية", "operation": "صرف", "amount": 4400000.0, "unit": "ج.م", "description": "Payment Voucher", "client": "O-2272 امانات فرع اسكندرية", "reference": "PY26ALX-00183", "balance": 1885685.0}, {"date": "2026-06-26", "type": "نقدية", "operation": "صرف", "amount": 200.0, "unit": "ج.م", "description": "Payment Voucher", "client": "C-0146 عبد العال يوسف عبد العال سليمة SAFE - محمد سليمه safe", "reference": "PY26ALX-00184", "balance": 1885485.0}, {"date": "2026-06-26", "type": "نقدية", "operation": "استلام", "amount": 317350.0, "unit": "ج.م", "description": "Receipt Voucher", "client": "O-2272 امانات فرع اسكندرية", "reference": "RV26ALX-00817", "balance": 2202835.0}, {"date": "2026-06-26", "type": "نقدية", "operation": "صرف", "amount": 381820.0, "unit": "ج.م", "description": "Payment Voucher", "client": "ESH-20296 عهدة سيد احمد سليمان", "reference": "PY26ALX-00185", "balance": 1821015.0}, {"date": "2026-06-26", "type": "نقدية", "operation": "صرف", "amount": 8605.0, "unit": "ج.م", "description": "Cash Transfer", "client": "Cash-8412", "reference": "BN26ALX-00242", "balance": 1812410.0}, {"date": "2026-06-26", "type": "نقدية", "operation": "صرف", "amount": 1812410.0, "unit": "ج.م", "description": "Cash Transfer", "client": "Cash-8412", "reference": "BN26ALX-00243", "balance": 0}];
+    const result=cashData.map((e,i)=>({...e,id:Date.now()+i}));
+    if(which==='book'){
+      BE=[...BE,...result.map(e=>({id:e.id,date:e.date,cash:e.amount,gold:0,note:e.reference}))];
+      save();renderB();
+    } else {
+      CE=[...CE.filter(e=>e.type!=='نقدية'),...result];
+      save();updateKPI();renderC();
+    }
+    hideProc(which);
+    showToast(which,true,'تم تحميل '+result.length+' حركة نقدية ✓');
+  } else if(ext==='csv'){
+    const t=await file.text();
+    const rows=t.split(/\r?\n/).map(line=>{
+      const r=[];let cur='';let inQ=false;
+      for(const ch of line){
+        if(ch==='"')inQ=!inQ;
+        else if(ch===','&&!inQ){r.push(cur.trim());cur='';}
+        else cur+=ch;
+      }
+      r.push(cur.trim());
+      return r;
+    });
+    const result=parseArgusRows(rows,which);
+    if(result&&result.length>0){
+      importData(result,which);
+    } else {
+      await callAI(t,'csv',which);
+    }
+  } else if(ext==='pdf'){
+    const r=new FileReader();
+    r.onload=async function(e){await callAI(e.target.result.split(',')[1],'pdf',which);};
+    r.readAsDataURL(file);
+  } else {
+    hideProc(which);
+    showToast(which,false,'صيغة غير مدعومة');
+  }
+}
+
+
+function importData(parsed,which){
+  if(which==='book') BE=[...BE,...parsed];
+  else CE=[...CE,...parsed];
+  save();
+  hideProc(which);
+  showToast(which,true,'تم استيراد '+parsed.length+' سجل بنجاح ✓');
+  if(which!=='book')renderC();else renderB();
+}
+
+function parseArgusRows(rows,which){
+  const isBook=(which==='book');
+  const results=[];
+  const pn=s=>{ const n=parseFloat(String(s||'').replace(/,/g,'')); return isNaN(n)?0:n; };
+  const skip=new Set(['opening Balance','opening balance','','Function Name',null,undefined]);
+
+  // Auto-detect columns from header row containing Reference + Debit
+  let C=null;
+  for(const row of rows){
+    if(!row) continue;
+    const r=row.map(v=>String(v||'').trim());
+    const ri=r.indexOf('Reference');
+    const di=r.indexOf('Debit');
+    const ci=r.indexOf('Credit');
+    const bi=r.indexOf('Balance');
+    const fi=r.indexOf('Function Name');
+    const dti=r.indexOf('Date');
+    const dsi=r.indexOf('Description');
+    const aci=r.indexOf('Account Info');
+    if(ri>=0&&di>=0){
+      C={fn:fi>=0?fi:2, dt:dti>=0?dti:6, rf:ri, ds:dsi>=0?dsi:ri+2,
+         ac:aci>=0?aci:ri+4, db:di, cr:ci>=0?ci:di+2, bl:bi>=0?bi:di+4};
+      break;
+    }
+  }
+  if(!C){
+    const mc=Math.max(...rows.filter(r=>r).map(r=>r.length));
+    C = mc>=30
+      ? {fn:3,dt:6,rf:8,ds:13,ac:17,db:23,cr:25,bl:29}
+      : {fn:2,dt:5,rf:7,ds:10,ac:14,db:20,cr:21,bl:25};
+  }
+
+  // Opening balance (previous period)
+  let openingBal=0, openingDate='';
+  for(const row of rows){
+    if(!row||row.length<=C.bl) continue;
+    if(String(row[C.fn]||'').trim()==='previous period'){
+      openingBal=pn(row[C.bl]);
+      const dtRaw=row[C.dt];
+      if(dtRaw instanceof Date)
+        openingDate=dtRaw.getFullYear()+'-'+String(dtRaw.getMonth()+1).padStart(2,'0')+'-'+String(dtRaw.getDate()).padStart(2,'0');
+      else{ const dp=String(dtRaw||'').split('/'); if(dp.length===3) openingDate=dp[2]+'-'+dp[1].padStart(2,'0')+'-'+dp[0].padStart(2,'0'); }
+      break;
+    }
+  }
+  if(openingBal>0&&!isBook)
+    results.push({id:Date.now(),date:openingDate,type:'نقدية',operation:'استلام',amount:openingBal,unit:'ج.م',description:'رصيد أول المدة',client:'رصيد أول المدة',reference:'opening',balance:openingBal});
+
+  for(const row of rows){
+    if(!row||row.length<=C.cr) continue;
+    const fn=row[C.fn];
+    if(skip.has(fn)||String(fn||'').trim()==='previous period') continue;
+    const dtRaw=row[C.dt];
+    const rf=String(row[C.rf]||'').trim();
+    if(!rf||rf.length<3||rf==='Reference') continue;
+    const db=pn(row[C.db]);
+    const cr=pn(row[C.cr]);
+    if(db===0&&cr===0) continue;
+
+    // Parse date
+    let dateISO='';
+    if(dtRaw instanceof Date){
+      dateISO=dtRaw.getFullYear()+'-'+String(dtRaw.getMonth()+1).padStart(2,'0')+'-'+String(dtRaw.getDate()).padStart(2,'0');
+    } else if(typeof dtRaw==='number'&&dtRaw>40000){
+      const d=new Date(Math.round((dtRaw-25569)*86400*1000));
+      dateISO=d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
+    } else {
+      const dt=String(dtRaw||'').trim();
+      if(/^\d{4}-\d{2}-\d{2}/.test(dt)) dateISO=dt.substring(0,10);
+      else if(dt.includes('/')){
+        const dp=dt.split('/');
+        if(dp.length===3){
+          const y=parseInt(dp[2])>100?dp[2]:'20'+dp[2];
+          dateISO=y+'-'+String(dp[1]).padStart(2,'0')+'-'+String(dp[0]).padStart(2,'0');
+        }
+      }
+    }
+    if(!dateISO) continue;
+
+    const ds=String(row[C.ds]||'').trim();
+    const ac=String(row[C.ac]||'').trim();
+    const bl=row.length>C.bl?pn(row[C.bl]):0;
+    const client=ac||ds;
+    const op=db>0?'استلام':'صرف';
+    const amt=db>0?db:cr;
+
+    if(isBook) results.push({id:Date.now()+results.length,date:dateISO,cash:amt,gold:0,note:rf});
+    else results.push({id:Date.now()+results.length,date:dateISO,type:'نقدية',operation:op,amount:amt,unit:'ج.م',description:String(fn||'').trim(),client,reference:rf,balance:bl});
+  }
+  return results;
+}
+
+async function callAI(content,type,which){
+  const isBook=(which==='book');
+  const prompt=isBook
+    ?'أنت مساعد محاسبة. استخرج الأرصدة الدفترية. أعد JSON فقط:\n[{"date":"YYYY-MM-DD","cash":0,"gold":0,"note":""}]'
+    :`أنت مساعد محاسبة خبير في كشوف Argus. الأعمدة: FunctionName|Date|Reference|Description|AccountInfo|Debit|Credit|Balance. Debit=استلام، Credit=صرف. أعد JSON فقط:\n[{"date":"YYYY-MM-DD","type":"نقدية","operation":"استلام أو صرف","amount":0,"unit":"ج.م","description":"","client":"","reference":"","balance":0}]`;
+  let msgs;
+  if(type==='pdf') msgs=[{role:'user',content:[{type:'document',source:{type:'base64',media_type:'application/pdf',data:content}},{type:'text',text:prompt}]}];
+  else msgs=[{role:'user',content:prompt+'\n\nالبيانات:\n'+content.substring(0,8000)}];
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:2000,messages:msgs})});
+    const data=await res.json();
+    if(data.error){hideProc(which);showToast(which,false,'خطأ: '+data.error.message);return;}
+    const raw=data.content.filter(c=>c.type==='text').map(c=>c.text).join('');
+    const m=raw.match(/\[[\s\S]*\]/);
+    if(!m){hideProc(which);showToast(which,false,'لم يُستخرج أي بيانات');return;}
+    const parsed=JSON.parse(m[0]);
+    importData(parsed.map((e,i)=>({...e,id:Date.now()+i})),which);
+  }catch(e){
+    hideProc(which);
+    showToast(which,false,'خطأ في التحليل: '+e.message);
+  }
+}
+
+/* ── toast / proc ── */
+function showProc(w,msg){
+  const p=document.getElementById('proc-'+w);
+  if(p){p.style.display='';document.getElementById('proc-'+w+'-msg').textContent=msg;}
+  const t=document.getElementById('toast-'+w);if(t)t.style.display='none';
+}
+function hideProc(w){const p=document.getElementById('proc-'+w);if(p)p.style.display='none';}
+function showToast(w,ok,msg){
+  const el=document.getElementById('toast-'+w);
+  el.className=ok?'toast-ok':'toast-err';
+  el.innerHTML=`<i class="ti ${ok?'ti-circle-check':'ti-alert-circle'}"></i>${msg}`;
+  el.style.display='flex';
+  if(ok) setTimeout(()=>el.style.display='none',6000);
+}
+
+/* ── export / sample ── */
+function renderDetails(){
+  const el=document.getElementById('detailsBody');
+  if(!CE.length){
+    el.innerHTML='<div class="empty"><i class="ti ti-chart-pie"></i><p>ارفع ملف تحصيل أولاً</p></div>';
+    return;
+  }
+
+  // تحصيل الأجر: استلام على حسابات C-
+  const totAjr = CE.filter(e=>e.operation==='استلام' && /C-\d/.test(e.client||'')).reduce((s,e)=>s+(+e.amount||0),0);
+  const cntAjr = CE.filter(e=>e.operation==='استلام' && /C-\d/.test(e.client||'')).length;
+
+  // أمانات فاين جولد: حركات O-2272
+  const totAmanatIn  = CE.filter(e=>e.operation==='استلام' && (/O-2272/.test(e.client||'')||/امانات/.test(e.client||''))).reduce((s,e)=>s+(+e.amount||0),0);
+  const totAmanatOut = CE.filter(e=>e.operation==='صرف'    && (/O-2272/.test(e.client||'')||/امانات/.test(e.client||''))).reduce((s,e)=>s+(+e.amount||0),0);
+  const netAmanat    = totAmanatIn - totAmanatOut;
+  const cntAmanat    = CE.filter(e=>/O-2272/.test(e.client||'')||/امانات/.test(e.client||'')).length;
+
+  el.innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:0.5rem 0">
+
+      <div style="background:var(--s2);border:0.5px solid var(--bd);border-top:3px solid var(--bds-s);border-radius:12px;padding:1.5rem 1.75rem">
+        <div style="font-size:12px;color:var(--tm);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+          <i class="ti ti-users" style="font-size:15px"></i> رصيد الأجر (تحصيل العملاء)
+        </div>
+        <div style="font-size:28px;font-weight:700;color:var(--tgs);margin-bottom:6px">ج.م ${fmt(totAjr)}</div>
+        <div style="font-size:12px;color:var(--tm)">${cntAjr} عملية تحصيل</div>
+      </div>
+
+      <div style="background:var(--s2);border:0.5px solid var(--bd);border-top:3px solid var(--bds-w);border-radius:12px;padding:1.5rem 1.75rem">
+        <div style="font-size:12px;color:var(--tm);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+          <i class="ti ti-building-bank" style="font-size:15px"></i> رصيد أمانات فاين جولد
+        </div>
+        <div style="font-size:28px;font-weight:700;color:var(--tgw);margin-bottom:6px">ج.م ${fmt(netAmanat)}</div>
+        <div style="font-size:12px;color:var(--tm)">استلام ${fmt(totAmanatIn)} — صرف ${fmt(totAmanatOut)}</div>
+      </div>
+
+    </div>
+  `;
+}
+
+function parseGoldRows(rows){
+  const results=[];
+  const pn=s=>{ const n=parseFloat(String(s||'').replace(/,/g,'')); return isNaN(n)?0:n; };
+  // FI205 xlsx cols (0-based):
+  // 2=Reference 3=Date 6=AccountRef 8=AccountName 9=SKU 11=ItemName 13=Qty 14=Purity 15=TotalQtyG21 23=Status
+  const C={ref:2,dt:3,acRef:6,acName:8,sku:9,name:11,qty:13,purity:14,status:23};
+
+  // Determine carat from SKU or name
+  function getCarat(sku,name){
+    const s=String(sku||'')+String(name||'');
+    if(/بلدي/i.test(s)) return 'سبائك بلدي';
+    if(/بندقي/i.test(s)) return 'سبائك بندقي';
+    if(/^18|عيار.?18|18-/i.test(s)) return 'عيار 18';
+    if(/^21|عيار.?21|21-/i.test(s)) return 'عيار 21';
+    return 'ذهب';
+  }
+
+  for(const row of rows){
+    if(!row||row.length<=C.qty) continue;
+    const ref=String(row[C.ref]||'').trim();
+    if(!ref.match(/^[RP]G\d{2}/)) continue; // only RG/PG references
+    const status=String(row[C.status]||'').trim();
+    if(status&&status!=='Posted') continue;
+
+    const dtRaw=row[C.dt];
+    let dateISO='';
+    // SheetJS raw:false + cellDates:true returns dates as "M/D/YYYY" strings
+    if(dtRaw instanceof Date){
+      dateISO=dtRaw.getFullYear()+'-'+String(dtRaw.getMonth()+1).padStart(2,'0')+'-'+String(dtRaw.getDate()).padStart(2,'0');
+    } else if(typeof dtRaw==='number'&&dtRaw>40000){
+      const d=new Date(Math.round((dtRaw-25569)*86400*1000));
+      dateISO=d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
+    } else {
+      const dt=String(dtRaw||'').trim();
+      if(!dt||dt==='null') continue;
+      if(/^\d{4}-\d{2}-\d{2}/.test(dt)){
+        dateISO=dt.substring(0,10);
+      } else if(dt.includes('/')){
+        const dp=dt.split('/');
+        if(dp.length===3){
+          // Could be M/D/YYYY or DD/MM/YYYY
+          const p0=parseInt(dp[0]),p1=parseInt(dp[1]),p2=parseInt(dp[2]);
+          const y=p2>1900?p2:2000+p2;
+          // If first part > 12, it's DD/MM/YYYY
+          if(p0>12){
+            dateISO=y+'-'+String(p1).padStart(2,'0')+'-'+String(p0).padStart(2,'0');
+          } else {
+            // Assume M/D/YYYY (SheetJS default)
+            dateISO=y+'-'+String(p0).padStart(2,'0')+'-'+String(p1).padStart(2,'0');
+          }
+        }
+      } else {
+        const d=new Date(dt);
+        if(!isNaN(d)) dateISO=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+      }
+    }
+    if(!dateISO) continue;
+
+    const qty=pn(row[C.qty]);
+    if(qty===0) continue;
+
+    const sku    = String(row[C.sku]||'').trim();
+    const name   = String(row[C.name]||'').trim();
+    const client = String(row[C.acName]||'').trim();
+    const carat  = getCarat(sku,name);
+    const op     = qty>0?'استلام':'صرف';
+    const amt    = Math.abs(qty);
+
+    results.push({
+      id:Date.now()+results.length,
+      date:dateISO,type:'ذهب',operation:op,
+      amount:amt,unit:'جم',
+      description:carat+' — '+name,
+      client,reference:ref,
+      carat, // extra field for KPI filtering
+      balance:null
+    });
+  }
+  return results;
+}
+
+function saveGoldOpening(){
+  const date   = document.getElementById('ob-date').value;
+  const g21    = parseFloat(document.getElementById('ob-g21').value)    || 0;
+  const g18    = parseFloat(document.getElementById('ob-g18').value)    || 0;
+  const g24    = parseFloat(document.getElementById('ob-g24').value)    || 0;
+  const gbaldi = parseFloat(document.getElementById('ob-gbaldi').value)  || 0;
+  if(!date){ alert('اختار التاريخ'); return; }
+  if(!g21 && !g18 && !g24 && !gbaldi){ alert('أدخل رصيد على الأقل عيار واحد'); return; }
+  CE = CE.filter(e=>!(e.type==='ذهب' && e.reference==='gold-opening'));
+  const entries=[
+    {carat:'عيار 21',    amount:g21,    desc:'ذهب كسر سادة واحجار عيار 21'},
+    {carat:'عيار 18',    amount:g18,    desc:'ذهب كسر سادة واحجار عيار 18'},
+    {carat:'عيار 24',    amount:g24,    desc:'ذهب عيار 24'},
+    {carat:'سبائك بلدي', amount:gbaldi, desc:'سبائك بلدي'},
+  ].filter(e=>e.amount>0);
+  entries.forEach((e,i)=>{
+    CE.push({id:Date.now()+i,date,type:'ذهب',operation:'استلام',
+      amount:e.amount,unit:'جم',description:e.desc,
+      client:'رصيد أول المدة',reference:'gold-opening',
+      carat:e.carat,labor:0,balance:null});
+  });
+  save();updateKPI();renderC();
+  const s=document.getElementById('ob-status');
+  s.textContent='✓ تم الحفظ';
+  setTimeout(()=>s.textContent='',3000);
+}
+
+function clearAll(){
+  if(!confirm('تأكيد مسح كل البيانات؟ لا يمكن التراجع')) return;
+  CE=[];BE=[];IE=[];
+  try{localStorage.removeItem('neg_ce');localStorage.removeItem('neg_be');localStorage.removeItem('neg_ie');}catch(e){}
+  updateKPI();renderC();renderB();renderI();
+  showToast('collect',true,'تم مسح كل البيانات');
+}
+
+function exportCSV(){
+  const rows=[['التاريخ','النوع','العملية','المبلغ','الوحدة','رقم السند','العميل/البيان','الرصيد']];
+  CE.forEach(e=>rows.push([e.date,e.type,e.operation,e.amount,e.unit||'',e.reference||'',e.client||e.description||'',e.balance||'']));
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\ufeff'+rows.map(r=>r.join(',')).join('\n')],{type:'text/csv;charset=utf-8'}));
+  a.download='خزينة_التحصيل.csv';a.click();
+}
+function loadSample(){
+  const s='التاريخ,النوع,العملية,المبلغ,الوحدة,رقم السند,العميل,الرصيد\n'+today+',نقدية,استلام,15000,ج.م,RV26ALX-00001,أحمد محمد,15000\n'+today+',ذهب,استلام,50.5,جم,RV26ALX-00002,شركة الأمل,\n'+today+',نقدية,صرف,3000,ج.م,PY26ALX-00001,مصروفات,12000';
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\ufeff'+s],{type:'text/csv;charset=utf-8'}));
+  a.download='نموذج_خزينة.csv';a.click();
+}
+
+/* ── save/load ── */
+function save(){
+  try{localStorage.setItem('neg_ce',JSON.stringify(CE));localStorage.setItem('neg_be',JSON.stringify(BE));localStorage.setItem('neg_ie',JSON.stringify(IE));}catch(e){}
+}
+function load(){
+  try{
+    const c=localStorage.getItem('neg_ce');if(c)CE=JSON.parse(c);
+    const b=localStorage.getItem('neg_be');if(b)BE=JSON.parse(b);
+    const i=localStorage.getItem('neg_ie');if(i)IE=JSON.parse(i);
+    updateKPI();
+  }catch(e){}
+}
+document.getElementById('addModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+
+function toggleTheme(){
+  const isDark=document.body.classList.toggle('dark');
+  document.getElementById('themeIcon').className=isDark?'ti ti-sun':'ti ti-moon';
+  document.getElementById('themeTxt').textContent=isDark?'فاتح':'داكن';
+  try{localStorage.setItem('neg_theme',isDark?'dark':'light');}catch(e){}
+}
+
+load();
+// Restore theme
+try{if(localStorage.getItem('neg_theme')==='dark'){document.body.classList.add('dark');document.getElementById('themeIcon').className='ti ti-sun';document.getElementById('themeTxt').textContent='فاتح';}}catch(e){}
+</script>
+</body>
+</html>
