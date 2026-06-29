@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Egypt Gold — خزينة التحصيل</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#C9A84C;--gold2:#F0C040;--gold3:#8B6914;
+  --sidebar-w:240px;
+  --bg:#FAFAF8;--surface:#FFFFFF;--surface2:#F7F5F0;--surface3:#EDE9E0;
+  --border:rgba(0,0,0,0.07);--border2:rgba(0,0,0,0.13);
+  --text:#1C1A14;--text2:#5C5540;--text3:#A89E85;
+  --green:#1E7A4A;--red:#B03020;--blue:#1A5F8A;
+  --green-bg:rgba(30,122,74,0.08);--red-bg:rgba(176,48,32,0.08);--blue-bg:rgba(26,95,138,0.08);
+  --gold-bg2:rgba(201,168,76,0.1);--gold-bg3:rgba(201,168,76,0.05);
+}
+body{font-family:'Segoe UI',Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex}
+
+/* SIDEBAR */
+.sidebar{
+  width:var(--sidebar-w);min-height:100vh;
+  background:linear-gradient(180deg,#1A1505 0%,#0F0D02 100%);
+  border-left:1px solid rgba(201,168,76,0.2);
+  display:flex;flex-direction:column;
+  position:fixed;right:0;top:0;bottom:0;
+  z-index:100;
+}
+.sidebar-brand{
+  padding:1.5rem 1.25rem;
+  border-bottom:1px solid rgba(201,168,76,0.15);
+  display:flex;align-items:center;gap:12px;
+}
+.brand-icon{
+  width:44px;height:44px;border-radius:12px;
+  background:linear-gradient(135deg,#C9A84C,#8B6914);
+  border:1px solid rgba(201,168,76,0.4);
+  display:flex;align-items:center;justify-content:center;font-size:22px;
+  flex-shrink:0;box-shadow:0 2px 12px rgba(201,168,76,0.3);
+}
+.brand-name{font-size:14px;font-weight:800;color:#F5EDD8;line-height:1.3;letter-spacing:0.01em}
+.brand-sub{font-size:9px;color:#C9A84C;letter-spacing:0.15em;text-transform:uppercase;margin-top:1px}
+.sidebar-nav{flex:1;padding:1rem 0.75rem;display:flex;flex-direction:column;gap:3px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 14px;border-radius:10px;
+  font-size:13px;color:rgba(245,237,216,0.55);
+  cursor:pointer;border:none;background:transparent;
+  width:100%;text-align:right;transition:all 0.15s;font-weight:500;
+}
+.nav-item:hover{background:rgba(201,168,76,0.08);color:rgba(245,237,216,0.85)}
+.nav-item.active{background:rgba(201,168,76,0.15);color:#C9A84C;font-weight:700;border:1px solid rgba(201,168,76,0.2)}
+.nav-item i{font-size:17px;flex-shrink:0}
+.sidebar-footer{
+  padding:1rem 0.75rem;border-top:1px solid rgba(201,168,76,0.12);
+  display:flex;flex-direction:column;gap:8px;
+}
+.date-badge{
+  font-size:11px;color:rgba(201,168,76,0.6);
+  background:rgba(201,168,76,0.06);border-radius:7px;
+  border:1px solid rgba(201,168,76,0.12);
+  padding:6px 10px;display:flex;align-items:center;gap:5px;
+}
+.theme-btn{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px;border-radius:8px;
+  font-size:12px;color:rgba(245,237,216,0.5);
+  background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,0.12);
+  cursor:pointer;width:100%;
+}
+.theme-btn:hover{color:rgba(245,237,216,0.8);background:rgba(201,168,76,0.08)}
+
+/* MAIN */
+.main{margin-right:var(--sidebar-w);flex:1;min-height:100vh;display:flex;flex-direction:column}
+.page{display:none;padding:1.5rem;flex:1}
+.page.active{display:block}
+
+/* PAGE HEADER */
+.page-header{margin-bottom:1.75rem;padding-bottom:1rem;border-bottom:2px solid var(--gold-bg3)}
+.page-title{font-size:22px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:10px}
+.page-title i{color:var(--gold);font-size:24px}
+.page-sub{font-size:13px;color:var(--text3);margin-top:4px;font-weight:500}
+
+/* KPI CARDS */
+.kpi-section{margin-bottom:1.5rem}
+.kpi-section-label{
+  font-size:11px;font-weight:800;letter-spacing:0.12em;
+  color:var(--gold);text-transform:uppercase;
+  margin-bottom:10px;display:flex;align-items:center;gap:8px;
+  padding:6px 0;
+}
+.kpi-section-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(201,168,76,0.3),transparent)}
+.kpi-grid{display:grid;gap:10px}
+.kpi-grid-3{grid-template-columns:repeat(3,1fr)}
+.kpi-grid-5{grid-template-columns:repeat(5,1fr)}
+.kpi-grid-2{grid-template-columns:repeat(2,1fr)}
+@media(max-width:900px){.kpi-grid-5{grid-template-columns:repeat(3,1fr)}.kpi-grid-3{grid-template-columns:repeat(2,1fr)}}
+.kpi{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:1.25rem 1.4rem;
+  border-top:3px solid var(--border);
+  transition:all 0.15s;box-shadow:0 1px 4px rgba(0,0,0,0.06);
+}
+.kpi:hover{box-shadow:0 4px 16px rgba(0,0,0,0.1);transform:translateY(-1px)}
+.kpi.green{border-top-color:var(--green)}
+.kpi.red{border-top-color:var(--red)}
+.kpi.blue{border-top-color:var(--blue)}
+.kpi.gold{border-top-color:var(--gold);background:linear-gradient(135deg,#FFFDF5,#FFF8E8)}
+.kpi-label{font-size:11px;color:var(--text3);margin-bottom:8px;display:flex;align-items:center;gap:5px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em}
+.kpi-val{font-size:22px;font-weight:800;line-height:1.2}
+.kpi-val.green{color:var(--green)}.kpi-val.red{color:var(--red)}.kpi-val.blue{color:var(--blue)}.kpi-val.gold{color:var(--gold3)}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:4px;font-weight:500}
+
+/* UPLOAD AREAS */
+.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:1.25rem}
+.upload-area{
+  border:1.5px dashed var(--border2);border-radius:12px;
+  padding:1.5rem;text-align:center;cursor:pointer;
+  background:var(--surface);transition:all 0.15s;
+}
+.upload-area:hover{border-color:var(--gold);background:var(--gold-bg2)}
+.upload-area i{font-size:28px;color:var(--text3);display:block;margin-bottom:8px}
+.upload-area p{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:3px}
+.upload-area span{font-size:11px;color:var(--text3)}
+.upload-area .badge{
+  display:inline-block;margin-top:6px;
+  font-size:10px;padding:2px 8px;border-radius:4px;
+  background:var(--gold-bg2);color:var(--gold);
+  border:0.5px solid var(--gold);
+}
+.proc{text-align:center;padding:1rem;color:var(--text3);font-size:12px}
+.proc i{font-size:22px;display:block;margin-bottom:5px;color:var(--gold);animation:spin 1s linear infinite}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.toast{
+  border-radius:8px;padding:8px 14px;font-size:12px;
+  display:flex;align-items:center;gap:6px;margin-bottom:10px;
+}
+.toast.ok{background:var(--green-bg);border:0.5px solid var(--green);color:var(--green)}
+.toast.err{background:var(--red-bg);border:0.5px solid var(--red);color:var(--red)}
+
+/* TABLES */
+.tbl-wrap{border-radius:10px;border:0.5px solid var(--border);overflow:hidden;overflow-x:auto;margin-bottom:1.25rem}
+.tbl-head{
+  padding:14px 18px;background:linear-gradient(90deg,var(--surface2),var(--surface));
+  border-bottom:2px solid var(--gold-bg3);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.tbl-head-title{font-size:13px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
+.tbl-head-title i{color:var(--gold);font-size:16px}
+.tbl-count{font-size:11px;color:var(--text3);background:var(--gold-bg2);padding:2px 10px;border-radius:20px;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:500px}
+thead th{
+  padding:11px 14px;text-align:right;
+  font-weight:700;font-size:11px;color:var(--gold3);
+  background:linear-gradient(90deg,var(--gold-bg3),transparent);
+  border-bottom:1px solid rgba(201,168,76,0.15);
+  letter-spacing:0.06em;text-transform:uppercase;
+}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;font-size:13px}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--gold-bg3)}
+.pill{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+.pill.in{background:var(--green-bg);color:var(--green)}
+.pill.out{background:var(--red-bg);color:var(--red)}
+.pill.gold{background:var(--gold-bg2);color:var(--gold)}
+.pill.cash{background:var(--blue-bg);color:var(--blue)}
+
+/* EMPTY */
+.empty{text-align:center;padding:3rem 1rem;color:var(--text3)}
+.empty i{font-size:40px;display:block;margin-bottom:10px;opacity:0.3}
+.empty p{font-size:13px}.empty span{font-size:11px;display:block;margin-top:4px}
+
+/* GOLD OPENING */
+.gold-opening{
+  background:var(--surface);border:0.5px solid var(--gold);
+  border-radius:12px;overflow:hidden;margin-bottom:1.25rem;
+}
+.gold-opening-head{
+  padding:10px 16px;background:var(--gold-bg2);
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:0.5px solid var(--gold);
+}
+.gold-opening-head span{font-size:12px;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:6px}
+.gold-opening-body{padding:12px 16px;display:grid;grid-template-columns:repeat(4,1fr) auto auto;gap:10px;align-items:end}
+.go-item label{font-size:10px;color:var(--text3);font-weight:600;display:block;margin-bottom:4px}
+.go-item input{
+  width:100%;font-size:13px;font-weight:700;
+  padding:7px 8px;border-radius:6px;text-align:center;
+  border:0.5px solid var(--border2);background:var(--surface2);
+  color:var(--gold);
+}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;font-size:12px;border-radius:7px;cursor:pointer;font-weight:600;border:none;transition:all 0.12s}
+.btn-gold{background:var(--gold);color:#000}
+.btn-gold:hover{background:var(--gold2)}
+.btn-ghost{background:var(--surface2);color:var(--text2);border:0.5px solid var(--border2)}
+.btn-ghost:hover{background:var(--surface3);color:var(--text)}
+.btn-danger{background:var(--red-bg);color:var(--red);border:0.5px solid var(--red)}
+
+/* FORMS */
+.form-box{background:var(--surface);border:0.5px solid var(--border);border-radius:12px;padding:1.25rem}
+.form-box h3{font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.form-box h3 i{color:var(--gold)}
+.fg{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.fg label{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:0.05em}
+.fg input,.fg select{font-size:13px;padding:8px 10px;border-radius:7px;border:0.5px solid var(--border2);background:var(--surface2);color:var(--text)}
+.fg input:focus,.fg select:focus{outline:2px solid var(--gold);outline-offset:1px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ACTION BAR */
+.action-bar{display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap}
+.action-bar .spacer{flex:1}
+.filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.filter-row select,.filter-row input{font-size:12px;padding:5px 10px;height:30px;border:0.5px solid var(--border2);border-radius:6px;background:var(--surface2);color:var(--text)}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:999;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal-box{background:var(--surface);border-radius:14px;border:0.5px solid var(--border2);padding:1.5rem;width:440px;max-width:95vw;max-height:90vh;overflow-y:auto}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+.modal-head span{font-size:14px;font-weight:700}
+.m-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.m-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem}
+
+/* DARK/LIGHT */
+.day-row:hover{background:var(--gold-bg3)!important}
+body.dark{--bg:#111008;--surface:#1A1810;--surface2:#221F14;--surface3:#2A2618;--border:rgba(201,168,76,0.1);--border2:rgba(201,168,76,0.18);--text:#F5EDD8;--text2:#C4B896;--text3:#7A7055;--green:#4CAF7D;--red:#E05252;--blue:#5B9BD5;--green-bg:rgba(76,175,125,0.12);--red-bg:rgba(224,82,82,0.12);--blue-bg:rgba(91,155,213,0.12);--gold-bg2:rgba(201,168,76,0.15);--gold-bg3:rgba(201,168,76,0.08)}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-brand">
+    <img src="data:image/jpeg;base64,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" style="width:48px;height:48px;border-radius:10px;object-fit:cover;flex-shrink:0;border:1px solid rgba(201,168,76,0.3)">
+    <div>
+      <div class="brand-name">New Egypt Gold</div>
+      <div class="brand-sub">since 1935</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <button class="nav-item active" onclick="goPage('collect',this)">
+      <i class="ti ti-calendar-day"></i> يومية التحصيل
+    </button>
+    <button class="nav-item" onclick="goPage('inventory',this)">
+      <i class="ti ti-clipboard-check"></i> الجرد
+    </button>
+    <button class="nav-item" onclick="goPage('book',this)">
+      <i class="ti ti-book-2"></i> الأرصدة
+    </button>
+    <button class="nav-item" onclick="goPage('dashboard',this)">
+      <i class="ti ti-chart-bar"></i> التقارير
+    </button>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="date-badge"><i class="ti ti-calendar" style="font-size:12px"></i><span id="todayLbl"></span></div>
+    <button class="theme-btn" onclick="toggleTheme()"><i class="ti ti-moon" id="themeIcon"></i><span id="themeTxt">الوضع الداكن</span></button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- PAGE: DASHBOARD -->
+  <div class="page" id="page-dashboard">
+    <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+      <div>
+        <div class="page-title"><i class="ti ti-layout-dashboard"></i> لوحة التحصيل</div>
+        <div class="page-sub">ملخص يومي للخزينة</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;background:var(--surface);border:1.5px solid rgba(201,168,76,0.3);border-radius:10px;padding:7px 12px">
+        <i class="ti ti-calendar" style="color:var(--gold);font-size:15px"></i>
+        <input type="date" id="viewDate" onchange="changeViewDate()" 
+          style="font-size:13px;border:none;background:transparent;color:var(--text);font-weight:700;cursor:pointer;outline:none">
+        <div style="width:1px;height:18px;background:rgba(201,168,76,0.2);margin:0 4px"></div>
+        <button onclick="saveCurrentDay()" title="حفظ اليوم" style="background:none;border:none;cursor:pointer;color:var(--gold);font-size:18px;display:flex;align-items:center;padding:0 2px">
+          <i class="ti ti-device-floppy"></i>
+        </button>
+        <button onclick="showDaysList()" title="الأيام المحفوظة" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:18px;display:flex;align-items:center;padding:0 2px">
+          <i class="ti ti-history"></i>
+        </button>
+      </div>
+    </div>
+    <div id="dayMsg" style="display:none;background:var(--gold-bg2);border:1px solid rgba(201,168,76,0.3);border-radius:8px;padding:7px 12px;font-size:12px;color:var(--gold3);margin-bottom:1rem"></div>
+
+    <!-- النقدية -->
+    <div class="kpi-section">
+      <div class="kpi-section-label"><i class="ti ti-coins" style="font-size:12px"></i> النقدية</div>
+      <div class="kpi-grid kpi-grid-3">
+        <div class="kpi green"><div class="kpi-label"><i class="ti ti-arrow-down-circle"></i> استلام نقدية</div><div class="kpi-val green" id="k-in">ج.م 0</div><div class="kpi-sub" id="k-in-sub">0 عملية</div></div>
+        <div class="kpi red"><div class="kpi-label"><i class="ti ti-arrow-up-circle"></i> صرف نقدية</div><div class="kpi-val red" id="k-out">ج.م 0</div><div class="kpi-sub" id="k-out-sub">0 عملية</div></div>
+        <div class="kpi blue"><div class="kpi-label"><i class="ti ti-wallet"></i> صافي رصيد النقدية</div><div class="kpi-val blue" id="k-net">ج.م 0</div><div class="kpi-sub" id="k-net-sub">—</div></div>
+      </div>
+    </div>
+
+    <!-- الذهب -->
+    <div class="kpi-section">
+      <div class="kpi-section-label"><i class="ti ti-medal" style="font-size:12px"></i> الذهب — الصافي (أول المدة + تحصيل - صرف)</div>
+      <div class="kpi-grid kpi-grid-3" style="margin-bottom:10px">
+        <div class="kpi gold"><div class="kpi-label"><i class="ti ti-scale"></i> صافي عيار 21</div><div class="kpi-val gold" id="k-g21">0.00 جم</div><div class="kpi-sub" id="k-g21-sub">—</div></div>
+        <div class="kpi gold"><div class="kpi-label"><i class="ti ti-scale"></i> صافي عيار 18</div><div class="kpi-val gold" id="k-g18">0.00 جم</div><div class="kpi-sub" id="k-g18-sub">—</div></div>
+        <div class="kpi gold"><div class="kpi-label"><i class="ti ti-scale"></i> صافي عيار 24</div><div class="kpi-val gold" id="k-g24">0.00 جم</div><div class="kpi-sub" id="k-g24-sub">—</div></div>
+
+      </div>
+      <div class="kpi-grid kpi-grid-3">
+        <div class="kpi green"><div class="kpi-label"><i class="ti ti-arrow-down-circle"></i> استلام ذهب اليوم</div><div class="kpi-val green" id="k-gin">0.00 جم</div><div class="kpi-sub" id="k-gin-sub">—</div></div>
+        <div class="kpi red"><div class="kpi-label"><i class="ti ti-arrow-up-circle"></i> صرف ذهب اليوم</div><div class="kpi-val red" id="k-gout">0.00 جم</div><div class="kpi-sub" id="k-gout-sub">—</div></div>
+        <div class="kpi gold"><div class="kpi-label"><i class="ti ti-medal"></i> صافي الكلي معادل عيار 21</div><div class="kpi-val gold" id="k-gtotal">0.00 جم</div><div class="kpi-sub">كل العيارات محوّلة لعيار 21</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: COLLECT -->
+  <div class="page active" id="page-collect">
+    <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div>
+        <div class="page-title"><i class="ti ti-list-details"></i> يومية التحصيل</div>
+        <div class="page-sub">النقدية والذهب</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;background:var(--s2);border:1.5px solid var(--bds-w);border-radius:10px;padding:7px 12px">
+        <i class="ti ti-calendar" style="color:var(--gold);font-size:15px"></i>
+        <input type="date" id="viewDate" onchange="changeViewDate()" style="font-size:13px;border:none;background:transparent;color:var(--tp);font-weight:700;cursor:pointer;outline:none">
+        <div style="width:1px;height:18px;background:rgba(201,168,76,0.2);margin:0 4px"></div>
+        <button onclick="saveCurrentDay()" title="حفظ اليوم" style="background:none;border:none;cursor:pointer;color:var(--gold);font-size:18px;display:flex;align-items:center"><i class="ti ti-device-floppy"></i></button>
+        <button onclick="showDaysList()" title="الأيام المحفوظة" style="background:none;border:none;cursor:pointer;color:var(--tm);font-size:18px;display:flex;align-items:center"><i class="ti ti-history"></i></button>
+      </div>
+    </div>
+    <div id="dayMsg" style="display:none;background:var(--bgw);border:1px solid var(--gold);border-radius:8px;padding:7px 12px;font-size:12px;color:var(--gold);margin-bottom:1rem"></div>
+
+
+    <!-- Filters & Actions -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <select id="fType" onchange="applyFilters()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:7px;background:var(--surface);color:var(--text)"><option value="">كل الأنواع</option><option>نقدية</option><option>ذهب</option></select>
+      <select id="fOp" onchange="applyFilters()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:7px;background:var(--surface);color:var(--text)"><option value="">كل العمليات</option><option>استلام</option><option>صرف</option></select>
+      <input type="date" id="fDate" onchange="applyFilters()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:7px;background:var(--surface);color:var(--text)">
+      <button onclick="clearFilters()" style="padding:6px 10px;border:1px solid var(--border2);border-radius:7px;background:var(--surface);color:var(--text3);cursor:pointer;font-size:12px"><i class="ti ti-x"></i></button>
+      <div style="flex:1"></div>
+      <button class="btn btn-gold" onclick="openModal()"><i class="ti ti-plus"></i> إضافة</button>
+      <button class="btn btn-danger" onclick="clearAll()"><i class="ti ti-trash"></i> مسح الكل</button>
+    </div>
+
+    <!-- Upload -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem">
+      <div style="border:1.5px dashed rgba(201,168,76,0.3);border-radius:10px;padding:1rem;display:flex;align-items:center;gap:12px;cursor:pointer;background:var(--surface);transition:all 0.15s" 
+           onclick="document.getElementById('fCash').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="dropF(event,'cash')"
+           onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='rgba(201,168,76,0.3)'">
+        <i class="ti ti-coins" style="font-size:22px;color:var(--gold);flex-shrink:0"></i>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text)">ملف النقدية</div>
+          <div style="font-size:11px;color:var(--text3)">.xlsx</div>
+        </div>
+      </div>
+      <div style="border:1.5px dashed rgba(201,168,76,0.3);border-radius:10px;padding:1rem;display:flex;align-items:center;gap:12px;cursor:pointer;background:var(--surface);transition:all 0.15s"
+           onclick="document.getElementById('fGold').click()" ondragover="event.preventDefault();this.style.borderColor='var(--gold)'" ondragleave="this.style.borderColor=''" ondrop="dropF(event,'gold')"
+           onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='rgba(201,168,76,0.3)'">
+        <i class="ti ti-medal" style="font-size:22px;color:var(--gold);flex-shrink:0"></i>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text)">ملف الذهب</div>
+          <div style="font-size:11px;color:var(--text3)">.xlsx</div>
+        </div>
+      </div>
+    </div>
+    <input type="file" id="fCash" accept=".xlsx,.xls,.csv" style="display:none" onchange="pickF(event,'cash')">
+    <input type="file" id="fGold" accept=".xlsx,.xls,.csv" style="display:none" onchange="pickF(event,'gold')">
+    <div id="proc-cash" style="display:none" class="proc"><i class="ti ti-loader-2"></i><span id="proc-cash-msg">جاري القراءة...</span></div>
+    <div id="proc-gold" style="display:none" class="proc"><i class="ti ti-loader-2"></i><span id="proc-gold-msg">جاري القراءة...</span></div>
+    <div id="toast-cash" style="display:none" class="toast"></div>
+    <div id="toast-gold" style="display:none" class="toast"></div>
+
+
+
+    <!-- أجر كسر السادة والسبائك -->
+    <div style="background:var(--surface);border:1px solid rgba(201,168,76,0.25);border-radius:12px;padding:12px 16px;margin-bottom:1rem;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+        <i class="ti ti-tool" style="color:var(--gold);font-size:16px"></i>
+        <span style="font-size:13px;font-weight:700;color:var(--text)">أجر كسر السادة والسبائك</span>
+      </div>
+      <input type="text" id="laborInput" placeholder="مثال: 829+709.5" oninput="evalLaborCalc()"
+        style="font-size:14px;font-weight:700;padding:7px 12px;border:1.5px solid var(--border2);border-radius:8px;background:var(--surface2);color:var(--green);width:200px;direction:ltr">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span style="font-size:12px;color:var(--text3)">= </span>
+        <span id="laborResult" style="font-size:15px;font-weight:800;color:var(--green)">0 ج.م</span>
+      </div>
+      <span style="font-size:11px;color:var(--text3)">يُضاف تلقائياً لرصيد النقدية</span>
+    </div>
+
+
+    <!-- Cash Table -->
+    <div class="tbl-wrap" id="cashSection" style="display:none">
+      <div class="tbl-head">
+        <span class="tbl-head-title"><i class="ti ti-coins"></i> حركات النقدية</span>
+        <span class="tbl-count" id="cashCount"></span>
+      </div>
+      <table>
+        <thead><tr><th>#</th><th>التاريخ</th><th>العملية</th><th>المبلغ</th><th>البيان</th><th>العميل / الجهة</th><th>الرصيد</th><th></th></tr></thead>
+        <tbody id="cashTbody"></tbody>
+      </table>
+    </div>
+
+    <!-- Gold Table -->
+    <div class="tbl-wrap" id="goldSection">
+      <!-- رصيد أول المدة داخل قسم الذهب -->
+      <div style="padding:14px 18px;background:linear-gradient(90deg,var(--gold-bg3),transparent);border-bottom:1px solid rgba(201,168,76,0.15);display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <span style="font-size:11px;font-weight:700;color:var(--gold3);white-space:nowrap;display:flex;align-items:center;gap:5px">
+          <i class="ti ti-history"></i> رصيد أول المدة
+        </span>
+        <div style="display:flex;gap:8px;flex:1;flex-wrap:wrap;align-items:center">
+          <div style="display:flex;flex-direction:column;gap:3px;min-width:100px">
+            <label style="font-size:9px;color:var(--gold);font-weight:700;letter-spacing:0.05em">🟡 عيار 21</label>
+            <input type="text" id="ob-g21" placeholder="0.00 أو 100+50" style="font-size:13px;font-weight:700;padding:5px 8px;border:1.5px solid rgba(201,168,76,0.3);border-radius:7px;background:var(--surface);color:var(--gold3);width:100%;text-align:center;direction:ltr">
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;min-width:100px">
+            <label style="font-size:9px;color:var(--gold);font-weight:700;letter-spacing:0.05em">🟠 عيار 18</label>
+            <input type="text" id="ob-g18" placeholder="0.00 أو 100+50" style="font-size:13px;font-weight:700;padding:5px 8px;border:1.5px solid rgba(201,168,76,0.3);border-radius:7px;background:var(--surface);color:var(--gold3);width:100%;text-align:center;direction:ltr">
+          </div>
+
+          <div style="display:flex;align-items:flex-end;gap:8px;padding-bottom:0">
+            <div style="display:flex;flex-direction:column;gap:3px">
+              <label style="font-size:9px;color:var(--gold);font-weight:700">التاريخ</label>
+              <input type="date" id="ob-date" style="font-size:12px;padding:5px 8px;border:1.5px solid rgba(201,168,76,0.3);border-radius:7px;background:var(--surface);color:var(--text)">
+            </div>
+            <button class="btn btn-gold" onclick="saveGoldOpening()" style="padding:6px 16px;height:34px;white-space:nowrap">
+              <i class="ti ti-check"></i> حفظ
+            </button>
+            <span id="ob-status" style="font-size:11px;color:var(--green);white-space:nowrap"></span>
+          </div>
+        </div>
+      </div>
+      <div class="tbl-head">
+        <span class="tbl-head-title"><i class="ti ti-medal"></i> حركات الذهب</span>
+        <span class="tbl-count" id="goldCount"></span>
+      </div>
+      <table>
+        <thead><tr><th>#</th><th>التاريخ</th><th>العيار</th><th>العملية</th><th>الوزن</th><th>نوع الكسر</th><th>البيان</th><th>العميل</th><th>الأجر</th><th></th></tr></thead>
+        <tbody id="goldTbody"></tbody>
+      </table>
+      <div id="emptyGold" class="empty"><i class="ti ti-inbox"></i><p>لا توجد حركات ذهب</p><span>ارفع ملف الذهب أو أضف رصيد أول المدة</span></div>
+    </div>
+
+    <div id="emptyCash" class="empty" style="display:none"><i class="ti ti-inbox"></i><p>لا توجد حركات نقدية</p></div>
+  </div>
+
+  <!-- PAGE: BOOK -->
+  <div class="page" id="page-book">
+    <div class="page-header">
+      <div class="page-title"><i class="ti ti-book-2"></i> الرصيد الدفتري</div>
+    </div>
+    <div class="two-col">
+      <div class="form-box">
+        <h3><i class="ti ti-edit"></i> إدخال رصيد دفتري</h3>
+        <div class="fg"><label>التاريخ</label><input type="date" id="b-date"></div>
+        <div class="fg"><label>رصيد النقدية (ج.م)</label><input type="number" id="b-cash" placeholder="0.00" step="0.01"></div>
+        <div class="fg"><label>رصيد الذهب (جم)</label><input type="number" id="b-gold" placeholder="0.00" step="0.01"></div>
+        <div class="fg"><label>ملاحظات</label><input type="text" id="b-note" placeholder="اختياري"></div>
+        <button class="btn btn-gold" onclick="addBook()"><i class="ti ti-check"></i> حفظ</button>
+      </div>
+      <div class="tbl-wrap">
+        <table><thead><tr><th>التاريخ</th><th>نقدية (ج.م)</th><th>ذهب (جم)</th><th>ملاحظات</th><th></th></tr></thead>
+        <tbody id="bookTbody"></tbody></table>
+        <div id="emptyBook" class="empty" style="padding:2rem"><i class="ti ti-book"></i><p>لا يوجد رصيد دفتري</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: INVENTORY -->
+  <div class="page" id="page-inventory">
+    <div class="page-header">
+      <div class="page-title"><i class="ti ti-clipboard-check"></i> الجرد اليومي</div>
+      <div class="page-sub">مقارنة الرصيد الدفتري بالرصيد الفعلي</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:1.5rem">
+
+      <!-- الرصيد الدفتري -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+        <div style="padding:12px 16px;background:linear-gradient(90deg,var(--blue-bg),transparent);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+          <i class="ti ti-book-2" style="color:var(--blue);font-size:16px"></i>
+          <span style="font-size:13px;font-weight:700;color:var(--blue)">الرصيد الدفتري</span>
+          <span style="font-size:11px;color:var(--text3);margin-right:auto">محسوب تلقائياً</span>
+        </div>
+        <div style="padding:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+            <div style="display:flex;align-items:center;gap:8px">
+              <i class="ti ti-coins" style="color:var(--text3)"></i>
+              <span style="font-size:13px;color:var(--text2)">النقدية</span>
+            </div>
+            <span style="font-size:17px;font-weight:800;color:var(--blue)" id="inv-book-cash">ج.م 0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+            <div style="display:flex;align-items:center;gap:8px">
+              <i class="ti ti-medal" style="color:var(--text3)"></i>
+              <span style="font-size:13px;color:var(--text2)">ذهب عيار 21</span>
+            </div>
+            <span style="font-size:17px;font-weight:800;color:var(--gold3)" id="inv-book-gold21">0.00 جم</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0">
+            <div style="display:flex;align-items:center;gap:8px">
+              <i class="ti ti-medal" style="color:var(--text3)"></i>
+              <span style="font-size:13px;color:var(--text2)">ذهب عيار 18</span>
+            </div>
+            <span style="font-size:17px;font-weight:800;color:var(--gold3)" id="inv-book-gold18">0.00 جم</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- الرصيد الفعلي -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden">
+        <div style="padding:12px 16px;background:linear-gradient(90deg,var(--green-bg),transparent);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+          <i class="ti ti-clipboard-check" style="color:var(--green);font-size:16px"></i>
+          <span style="font-size:13px;font-weight:700;color:var(--green)">الرصيد الفعلي</span>
+          <span style="font-size:11px;color:var(--text3);margin-right:auto">تدخله يدوياً</span>
+        </div>
+        <div style="padding:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);gap:12px">
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+              <i class="ti ti-coins" style="color:var(--text3)"></i>
+              <span style="font-size:13px;color:var(--text2)">النقدية</span>
+            </div>
+            <input type="text" id="i-cash" placeholder="مثال: 1000+500.25" oninput="evalCalc('i-cash');calcDiff()"
+              style="font-size:14px;font-weight:700;text-align:left;border:1.5px solid var(--border2);border-radius:8px;padding:6px 10px;background:var(--surface2);color:var(--green);width:170px;direction:ltr">
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);gap:12px">
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+              <i class="ti ti-medal" style="color:var(--text3)"></i>
+              <span style="font-size:13px;color:var(--text2)">عيار 21 (جم)</span>
+            </div>
+            <input type="text" id="i-gold21" placeholder="مثال: 52.25+5.5" oninput="evalCalc('i-gold21');calcDiff()"
+              style="font-size:14px;font-weight:700;text-align:left;border:1.5px solid var(--border2);border-radius:8px;padding:6px 10px;background:var(--surface2);color:var(--gold3);width:170px;direction:ltr">
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;gap:12px">
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+              <i class="ti ti-medal" style="color:var(--text3)"></i>
+              <span style="font-size:13px;color:var(--text2)">عيار 18 (جم)</span>
+            </div>
+            <input type="text" id="i-gold18" placeholder="مثال: 100+50.5" oninput="evalCalc('i-gold18');calcDiff()"
+              style="font-size:14px;font-weight:700;text-align:left;border:1.5px solid var(--border2);border-radius:8px;padding:6px 10px;background:var(--surface2);color:var(--gold3);width:170px;direction:ltr">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- نتيجة الجرد -->
+    <div id="inv-result" style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:1.5rem">
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+        <i class="ti ti-scale" style="color:var(--gold);font-size:16px"></i>
+        <span style="font-size:13px;font-weight:700;color:var(--gold)">نتيجة الجرد</span>
+      </div>
+      <div style="padding:16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+        <div id="diff-cash-box" style="border-radius:10px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border)">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase">فرق النقدية</div>
+          <div id="diff-cash-val" style="font-size:20px;font-weight:800;color:var(--text3)">—</div>
+          <div id="diff-cash-lbl" style="font-size:11px;margin-top:3px;color:var(--text3)">أدخل الفعلي</div>
+        </div>
+        <div id="diff-gold21-box" style="border-radius:10px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border)">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase">فرق عيار 21</div>
+          <div id="diff-gold21-val" style="font-size:20px;font-weight:800;color:var(--text3)">—</div>
+          <div id="diff-gold21-lbl" style="font-size:11px;margin-top:3px;color:var(--text3)">أدخل الفعلي</div>
+        </div>
+        <div id="diff-gold18-box" style="border-radius:10px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border)">
+          <div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:6px;text-transform:uppercase">فرق عيار 18</div>
+          <div id="diff-gold18-val" style="font-size:20px;font-weight:800;color:var(--text3)">—</div>
+          <div id="diff-gold18-lbl" style="font-size:11px;margin-top:3px;color:var(--text3)">أدخل الفعلي</div>
+        </div>
+      </div>
+      <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px">
+          <input type="date" id="i-date" style="font-size:12px;padding:5px 10px;border:1px solid var(--border2);border-radius:7px;background:var(--surface2);color:var(--text)">
+          <input type="text" id="i-note" placeholder="ملاحظات..." style="font-size:12px;padding:5px 10px;border:1px solid var(--border2);border-radius:7px;background:var(--surface2);color:var(--text);width:160px">
+        </div>
+        <button class="btn btn-gold" onclick="addInv()"><i class="ti ti-device-floppy"></i> حفظ الجرد</button>
+      </div>
+    </div>
+
+    <!-- سجل الجردات -->
+    <div class="tbl-wrap">
+      <div class="tbl-head">
+        <span class="tbl-head-title"><i class="ti ti-history"></i> سجل الجردات</span>
+        <span class="tbl-count" id="invCount"></span>
+      </div>
+      <table>
+        <thead><tr>
+          <th>التاريخ</th>
+          <th>نقدية دفتري</th><th>نقدية فعلي</th><th>فرق النقدية</th>
+          <th>21 دفتري</th><th>21 فعلي</th><th>فرق 21</th>
+          <th>18 دفتري</th><th>18 فعلي</th><th>فرق 18</th>
+          <th>الحالة</th><th></th>
+        </tr></thead>
+        <tbody id="invTbody"></tbody>
+      </table>
+      <div id="emptyInv" class="empty" style="padding:2rem"><i class="ti ti-clipboard"></i><p>لم يُسجَّل أي جرد</p></div>
+    </div>
+  </div>
+
+  <!-- PAGE: DETAILS -->
+  <div class="page" id="page-details">
+    <div class="page-header">
+      <div class="page-title"><i class="ti ti-chart-pie"></i> تفاصيل النقدية</div>
+    </div>
+    <div class="kpi-grid kpi-grid-2" id="detailsBody">
+      <div class="empty" style="grid-column:1/-1"><i class="ti ti-chart-pie"></i><p>ارفع ملف تحصيل أولاً</p></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- DAYS LIST MODAL -->
+<div id="daysModal" class="modal-bg">
+  <div class="modal-box" style="width:520px">
+    <div class="modal-head">
+      <span><i class="ti ti-calendar-stats" style="margin-left:6px;color:var(--gold)"></i>الأيام المحفوظة</span>
+      <button onclick="document.getElementById('daysModal').classList.remove('open')" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:20px"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="daysList" style="max-height:400px;overflow-y:auto"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="addModal" class="modal-bg">
+  <div class="modal-box">
+    <div class="modal-head">
+      <span><i class="ti ti-plus-circle" style="margin-left:6px;color:var(--gold)"></i>إضافة حركة</span>
+      <button onclick="closeModal()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:20px"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="m-grid">
+      <div class="fg"><label>التاريخ</label><input type="date" id="m-date"></div>
+      <div class="fg"><label>النوع</label><select id="m-type" onchange="toggleUnit()"><option>نقدية</option><option>ذهب</option></select></div>
+      <div class="fg"><label>العملية</label><select id="m-op"><option>استلام</option><option>صرف</option></select></div>
+      <div class="fg"><label id="m-ul">المبلغ (ج.م)</label><input type="number" id="m-amt" placeholder="0.00" step="0.01"></div>
+      <div class="fg" id="m-carat-box" style="display:none"><label>العيار</label><select id="m-carat"><option value="عيار 21">عيار 21</option><option value="عيار 18">عيار 18</option><option value="عيار 24">عيار 24</option></select></div>
+      <div class="fg" style="grid-column:1/-1"><label>البيان</label><input type="text" id="m-desc" placeholder="وصف الحركة"></div>
+      <div class="fg" style="grid-column:1/-1"><label>العميل / المورد</label><input type="text" id="m-client" placeholder="اختياري"></div>
+    </div>
+    <div class="m-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">إلغاء</button>
+      <button class="btn btn-gold" onclick="saveEntry()"><i class="ti ti-check"></i> حفظ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let CE=[],BE=[],IE=[];
+const today=new Date().toISOString().split('T')[0];
+document.getElementById('todayLbl').textContent=new Date().toLocaleDateString('ar-EG',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
+['b-date','i-date','m-date','ob-date','viewDate'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=today;});
+
+function goPage(pg,btn){
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+pg).classList.add('active');
+  if(pg==='collect')renderCollect();
+  if(pg==='book')renderBook();
+  if(pg==='inventory')renderInv();
+  if(pg==='details')renderDetails();
+  if(pg==='dashboard')updateKPI();
+}
+
+// Formatting
+const fmtC=n=>(+n||0).toLocaleString('ar-EG',{minimumFractionDigits:0,maximumFractionDigits:0});
+const fmtG=n=>(+n||0).toLocaleString('ar-EG',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+// KPI
+function updateKPI(){
+  const cashIn =CE.filter(e=>e.type==='نقدية'&&e.operation==='استلام'&&e.reference!=='opening').reduce((s,e)=>s+(+e.amount||0),0);
+  const cashOut=CE.filter(e=>e.type==='نقدية'&&e.operation==='صرف').reduce((s,e)=>s+(+e.amount||0),0);
+  const lastBal=[...CE].reverse().find(e=>e.type==='نقدية'&&e.balance!=null&&e.balance!=='');
+  const baseNet=lastBal?+lastBal.balance:(cashIn-cashOut);
+  const labor=getLaborAmount();
+  const net=baseNet+labor;
+
+  document.getElementById('k-in').textContent='ج.م '+fmtC(cashIn);
+  document.getElementById('k-out').textContent='ج.م '+fmtC(cashOut);
+  document.getElementById('k-net').textContent='ج.م '+fmtC(net);
+  document.getElementById('k-in-sub').textContent=CE.filter(e=>e.type==='نقدية'&&e.operation==='استلام'&&e.reference!=='opening').length+' عملية';
+  document.getElementById('k-out-sub').textContent=CE.filter(e=>e.type==='نقدية'&&e.operation==='صرف').length+' عملية';
+  document.getElementById('k-net-sub').textContent='رصيد الخزينة النهائي';
+
+  const gd=CE.filter(e=>e.type==='ذهب');
+  const gAmt=(op,cat)=>gd.filter(e=>e.operation===op&&(cat?e.carat===cat:true)).reduce((s,e)=>s+(+e.amount||0),0);
+  const gNet=cat=>gAmt('استلام',cat)-gAmt('صرف',cat);
+
+  [['k-g21','عيار 21'],['k-g18','عيار 18'],['k-g24','عيار 24']].forEach(([id,cat])=>{
+    const el=document.getElementById(id); if(!el) return;
+    el.textContent=fmtG(gNet(cat))+' جم';
+    document.getElementById(id+'-sub').textContent='صافي '+cat;
+  });
+  const todayIn=gAmt('استلام',null)-gAmt('استلام',null,true);
+  const ginAll=gd.filter(e=>e.operation==='استلام'&&e.reference!=='gold-opening').reduce((s,e)=>s+(+e.amount||0),0);
+  const goutAll=gd.filter(e=>e.operation==='صرف').reduce((s,e)=>s+(+e.amount||0),0);
+  // صافي الذهب الكلي معادل عيار 21 (من Total Qty G21)
+  const ginG21=gd.filter(e=>e.operation==='استلام').reduce((s,e)=>s+(+e.amountG21||+e.amount||0),0);
+  const goutG21=gd.filter(e=>e.operation==='صرف').reduce((s,e)=>s+(+e.amountG21||+e.amount||0),0);
+  const gtotal=ginG21-goutG21;
+  document.getElementById('k-gin').textContent=fmtG(ginAll)+' جم';
+  document.getElementById('k-gout').textContent=fmtG(goutAll)+' جم';
+  document.getElementById('k-gtotal').textContent=fmtG(gtotal)+' جم';
+  document.getElementById('k-gin-sub').textContent=gd.filter(e=>e.operation==='استلام'&&e.reference!=='gold-opening').length+' حركة';
+  document.getElementById('k-gout-sub').textContent=gd.filter(e=>e.operation==='صرف').length+' حركة';
+  // تحديث الرصيد الدفتري في صفحة الجرد تلقائياً
+  calcDiff();
+}
+
+// Render collect
+function renderCollect(){
+  updateKPI();
+  const cashData=CE.filter(e=>e.type==='نقدية');
+  const goldData=CE.filter(e=>e.type==='ذهب');
+
+  // Cash
+  const cs=document.getElementById('cashSection');
+  const ec=document.getElementById('emptyCash');
+  if(cashData.length){
+    cs.style.display='';ec.style.display='none';
+    document.getElementById('cashCount').textContent=cashData.length+' حركة';
+    document.getElementById('cashTbody').innerHTML=cashData.map((e,i)=>`<tr>
+      <td style="color:var(--text3)">${i+1}</td>
+      <td style="white-space:nowrap">${e.date||'—'}</td>
+      <td><span class="pill ${e.operation==='استلام'?'in':'out'}">${e.operation}</span></td>
+      <td style="font-weight:700;color:${e.operation==='استلام'?'var(--green)':'var(--red)'};white-space:nowrap">ج.م ${fmtC(e.amount)}</td>
+      <td style="color:var(--text3);font-size:11px;white-space:nowrap">${e.descriptionField||'—'}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${e.client||''}">${e.client||'—'}</td>
+      <td style="white-space:nowrap;color:var(--blue)">${e.balance!=null&&e.balance!==''?'ج.م '+fmtC(e.balance):'—'}</td>
+      <td><button onclick="delEntry(${e.id})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px"><i class="ti ti-trash"></i></button></td>
+    </tr>`).join('');
+  } else { cs.style.display='none'; ec.style.display=''; }
+
+  // Gold
+  const eg=document.getElementById('emptyGold');
+  if(goldData.length){
+    eg.style.display='none';
+    document.getElementById('goldCount').textContent=goldData.length+' حركة';
+    document.getElementById('goldTbody').innerHTML=goldData.map((e,i)=>`<tr>
+      <td style="color:var(--text3)">${i+1}</td>
+      <td style="white-space:nowrap">${e.date||'—'}</td>
+      <td><span class="pill gold" style="font-size:10px">${e.carat||'ذهب'}</span></td>
+      <td><span class="pill ${e.operation==='استلام'?'in':'out'}">${e.operation}</span></td>
+      <td style="font-weight:700;color:${e.operation==='استلام'?'var(--green)':'var(--red)'};white-space:nowrap">${fmtG(e.amount)} جم</td>
+
+      <td style="color:var(--gold);font-size:11px;white-space:nowrap">${e.description||'—'}</td>
+      <td style="color:var(--text3);font-size:11px;white-space:nowrap">${e.descriptionField||'—'}</td>
+      <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${e.client||''}">${e.client||'—'}</td>
+      <td style="color:var(--text3)">${e.labor?fmtC(e.labor):' —'}</td>
+      <td><button onclick="delEntry(${e.id})" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:13px"><i class="ti ti-trash"></i></button></td>
+    </tr>`).join('');
+  } else { eg.style.display=''; document.getElementById('goldTbody').innerHTML=''; document.getElementById('goldCount').textContent=''; }
+}
+
+function applyFilters(){
+  const t=document.getElementById('fType').value;
+  const o=document.getElementById('fOp').value;
+  const d=document.getElementById('fDate').value;
+  const f=CE.filter(e=>(!t||e.type===t)&&(!o||e.operation===o)&&(!d||e.date===d));
+  const cashData=f.filter(e=>e.type==='نقدية');
+  const goldData=f.filter(e=>e.type==='ذهب');
+  if(cashData.length){document.getElementById('cashSection').style.display='';document.getElementById('cashTbody').innerHTML=cashData.map((e,i)=>`<tr><td>${i+1}</td><td>${e.date}</td><td><span class="pill ${e.operation==='استلام'?'in':'out'}">${e.operation}</span></td><td style="font-weight:700;color:${e.operation==='استلام'?'var(--green)':'var(--red)'}">ج.م ${fmtC(e.amount)}</td><td style="color:var(--text3)">${e.reference||'—'}</td><td>${e.client||'—'}</td><td style="color:var(--blue)">${e.balance!=null?'ج.م '+fmtC(e.balance):'—'}</td><td><button onclick="delEntry(${e.id})" style="background:none;border:none;cursor:pointer;color:var(--text3)"><i class="ti ti-trash"></i></button></td></tr>`).join('');}
+  else document.getElementById('cashSection').style.display='none';
+  if(goldData.length){document.getElementById('emptyGold').style.display='none';document.getElementById('goldTbody').innerHTML=goldData.map((e,i)=>`<tr><td>${i+1}</td><td>${e.date}</td><td><span class="pill gold">${e.carat||'ذهب'}</span></td><td><span class="pill ${e.operation==='استلام'?'in':'out'}">${e.operation}</span></td><td style="font-weight:700;color:${e.operation==='استلام'?'var(--green)':'var(--red)'}">${fmtG(e.amount)} جم</td><td style="color:var(--text3)">${e.reference||'—'}</td><td style="color:var(--gold)">${e.description||'—'}</td><td>${e.client||'—'}</td><td>${e.labor||'—'}</td><td><button onclick="delEntry(${e.id})" style="background:none;border:none;cursor:pointer;color:var(--text3)"><i class="ti ti-trash"></i></button></td></tr>`).join('');}
+  else document.getElementById('emptyGold').style.display='';
+}
+function clearFilters(){['fType','fOp'].forEach(id=>document.getElementById(id).value='');document.getElementById('fDate').value='';renderCollect();}
+function delEntry(id){if(confirm('تأكيد حذف؟')){CE=CE.filter(e=>e.id!==id);save();renderCollect();updateKPI();}}
+
+// Book
+function renderBook(){
+  const tb=document.getElementById('bookTbody'),em=document.getElementById('emptyBook');
+  if(!BE.length){tb.innerHTML='';em.style.display='';return;}
+  em.style.display='none';
+  tb.innerHTML=BE.map(e=>`<tr><td>${e.date}</td><td style="color:var(--blue);font-weight:700">${fmtC(e.cash)} ج.م</td><td style="color:var(--gold);font-weight:700">${fmtG(e.gold)} جم</td><td style="color:var(--text3)">${e.note||'—'}</td><td><button onclick="delBook(${e.id})" style="background:none;border:none;cursor:pointer;color:var(--text3)"><i class="ti ti-trash"></i></button></td></tr>`).join('');
+}
+function delBook(id){if(confirm('تأكيد حذف؟')){BE=BE.filter(e=>e.id!==id);save();renderBook();}}
+function addBook(){
+  const d=document.getElementById('b-date').value;if(!d)return;
+  BE.push({id:Date.now(),date:d,cash:parseFloat(document.getElementById('b-cash').value)||0,gold:parseFloat(document.getElementById('b-gold').value)||0,note:document.getElementById('b-note').value});
+  save();renderBook();['b-cash','b-gold','b-note'].forEach(id=>document.getElementById(id).value='');
+}
+
+// Inventory
+function renderInv(){
+  const tb=document.getElementById('invTbody'),em=document.getElementById('emptyInv');
+  if(!IE.length){tb.innerHTML='';em.style.display='';return;}
+  em.style.display='none';
+  tb.innerHTML=IE.map(e=>`<tr><td>${e.date}</td><td style="color:var(--green);font-weight:700">${fmtC(e.cash)} ج.م</td><td style="color:var(--gold);font-weight:700">${fmtG(e.gold)} جم</td><td style="color:var(--text3)">${e.pcs||'—'}</td><td style="color:var(--text3)">${e.note||'—'}</td><td><button onclick="delInv(${e.id})" style="background:none;border:none;cursor:pointer;color:var(--text3)"><i class="ti ti-trash"></i></button></td></tr>`).join('');
+}
+function delInv(id){if(confirm('تأكيد حذف؟')){IE=IE.filter(e=>e.id!==id);save();renderInv();}}
+function addInv(){
+  const d=document.getElementById('i-date').value;if(!d)return;
+  const bookCash=getCashBalance();
+  const bookGold21=getGoldBalance('عيار 21');
+  const bookGold18=getGoldBalance('عيار 18');
+  const actCash=getCalcVal('i-cash');
+  const actGold21=getCalcVal('i-gold21');
+  const actGold18=getCalcVal('i-gold18');
+  IE.push({
+    id:Date.now(),date:d,
+    bookCash,bookGold21,bookGold18,
+    cash:actCash,gold21:actGold21,gold18:actGold18,
+    diffCash:actCash-bookCash,
+    diffGold21:actGold21-bookGold21,
+    diffGold18:actGold18-bookGold18,
+    note:document.getElementById('i-note').value
+  });
+  save();renderInv();
+  ['i-cash','i-gold21','i-gold18','i-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+}
+
+function getCashBalance(){
+  const lastBal=[...CE].reverse().find(e=>e.type==='نقدية'&&e.balance!=null&&e.balance!=='');
+  const base=lastBal?+lastBal.balance:(()=>{
+    const cashIn=CE.filter(e=>e.type==='نقدية'&&e.operation==='استلام'&&e.reference!=='opening').reduce((s,e)=>s+(+e.amount||0),0);
+    const cashOut=CE.filter(e=>e.type==='نقدية'&&e.operation==='صرف').reduce((s,e)=>s+(+e.amount||0),0);
+    return cashIn-cashOut;
+  })();
+  return base+getLaborAmount();
+}
+
+function getGoldBalance(carat){
+  const gd=CE.filter(e=>e.type==='ذهب'&&(carat?e.carat===carat:true));
+  const gin=gd.filter(e=>e.operation==='استلام').reduce((s,e)=>s+(+e.amount||0),0);
+  const gout=gd.filter(e=>e.operation==='صرف').reduce((s,e)=>s+(+e.amount||0),0);
+  return gin-gout;
+}
+
+function evalLaborCalc(){
+  const el=document.getElementById('laborInput');
+  const res=document.getElementById('laborResult');
+  if(!el||!res) return;
+  const val=el.value.trim();
+  if(!val){res.textContent='0 ج.م';updateKPI();return;}
+  try{
+    const safe=val.replace(/[^0-9.+\-*\/\s]/g,'');
+    const result=Function('"use strict";return ('+safe+')')();
+    if(!isNaN(result)&&isFinite(result)&&result>=0){
+      res.textContent=fmtC(result)+' ج.م';
+      el.style.borderColor='var(--green)';
+    } else {
+      res.textContent='خطأ';el.style.borderColor='var(--red)';
+    }
+  }catch(e){
+    res.textContent='خطأ';el.style.borderColor='var(--red)';
+  }
+  updateKPI();
+  calcDiff();
+}
+
+function getLaborAmount(){
+  const el=document.getElementById('laborInput');
+  if(!el||!el.value.trim()) return 0;
+  try{
+    const safe=el.value.replace(/[^0-9.+\-*\/\s]/g,'');
+    const result=Function('"use strict";return ('+safe+')')();
+    return(!isNaN(result)&&isFinite(result)&&result>=0)?result:0;
+  }catch(e){return 0;}
+}
+
+function evalCalc(id){
+  const el=document.getElementById(id);
+  if(!el) return;
+  const val=el.value.trim();
+  if(!val) return;
+  // Only evaluate if contains operators
+  if(/[+\-*\/]/.test(val)){
+    try{
+      // Safe eval: only allow numbers, dots, +, -, *, /
+      const safe=val.replace(/[^0-9.+\-*\/\s]/g,'');
+      const result=Function('"use strict";return ('+safe+')')();
+      if(!isNaN(result)&&isFinite(result)){
+        el.dataset.calc=result.toFixed(2);
+        el.title='= '+result.toFixed(2);
+        el.style.borderColor='var(--green)';
+      }
+    }catch(e){
+      el.dataset.calc='';
+      el.style.borderColor='var(--red)';
+    }
+  } else {
+    el.dataset.calc='';
+    el.title='';
+    el.style.borderColor='var(--border2)';
+  }
+}
+
+function getCalcVal(id){
+  const el=document.getElementById(id);
+  if(!el) return 0;
+  // Use calculated value if exists, otherwise parse directly
+  if(el.dataset.calc) return parseFloat(el.dataset.calc)||0;
+  return parseFloat(el.value)||0;
+}
+
+function calcDiff(){
+  const bookCash=getCashBalance();
+  const bookGold21=getGoldBalance('عيار 21');
+  const bookGold18=getGoldBalance('عيار 18');
+
+  // Update book display
+  const bc=document.getElementById('inv-book-cash');if(bc)bc.textContent='ج.م '+fmtC(bookCash);
+  const bg21=document.getElementById('inv-book-gold21');if(bg21)bg21.textContent=fmtG(bookGold21)+' جم';
+  const bg18=document.getElementById('inv-book-gold18');if(bg18)bg18.textContent=fmtG(bookGold18)+' جم';
+
+  function applyDiff(inputId,boxId,valId,lblId,book,unit){
+    const inp=document.getElementById(inputId);
+    const box=document.getElementById(boxId);
+    const val=document.getElementById(valId);
+    const lbl=document.getElementById(lblId);
+    if(!inp||!box) return;
+    if(inp.value===''){
+      val.textContent='—';val.style.color='var(--text3)';
+      lbl.textContent='أدخل الفعلي';lbl.style.color='var(--text3)';
+      box.style.background='var(--surface2)';box.style.borderColor='var(--border)';
+    } else {
+      const act=getCalcVal(inputId);
+      const diff=act-book;
+      if(diff===0){
+        val.textContent='✓ مطابق';val.style.color='var(--green)';
+        lbl.textContent='لا يوجد فرق';lbl.style.color='var(--green)';
+        box.style.background='var(--green-bg)';box.style.borderColor='var(--green)';
+      } else {
+        val.textContent=(diff>0?'+':'')+( unit==='جم'?fmtG(diff)+' جم':fmtC(diff)+' ج.م');
+        val.style.color=diff>0?'var(--green)':'var(--red)';
+        lbl.textContent=diff>0?'زيادة':'عجز';lbl.style.color=diff>0?'var(--green)':'var(--red)';
+        box.style.background=diff>0?'var(--green-bg)':'var(--red-bg)';box.style.borderColor=diff>0?'var(--green)':'var(--red)';
+      }
+    }
+  }
+  applyDiff('i-cash','diff-cash-box','diff-cash-val','diff-cash-lbl',bookCash,'ج.م');
+  applyDiff('i-gold21','diff-gold21-box','diff-gold21-val','diff-gold21-lbl',bookGold21,'جم');
+  applyDiff('i-gold18','diff-gold18-box','diff-gold18-val','diff-gold18-lbl',bookGold18,'جم');
+}
+
+// Details
+function renderDetails(){
+  const el=document.getElementById('detailsBody');
+  if(!CE.length){el.innerHTML='<div class="empty" style="grid-column:1/-1"><i class="ti ti-chart-pie"></i><p>ارفع ملف تحصيل أولاً</p></div>';return;}
+  const ajr=CE.filter(e=>e.type==='نقدية'&&e.operation==='استلام'&&/^C-\d/.test(e.reference||''));
+  const totAjr=ajr.reduce((s,e)=>s+(+e.amount||0),0);
+  const amanatIn=CE.filter(e=>e.type==='نقدية'&&e.operation==='استلام'&&(/O-2272/.test(e.client||'')||/امانات/.test(e.client||'')));
+  const amanatOut=CE.filter(e=>e.type==='نقدية'&&e.operation==='صرف'&&(/O-2272/.test(e.client||'')||/امانات/.test(e.client||'')));
+  const totAIn=amanatIn.reduce((s,e)=>s+(+e.amount||0),0);
+  const totAOut=amanatOut.reduce((s,e)=>s+(+e.amount||0),0);
+  el.innerHTML=`
+    <div class="kpi green"><div class="kpi-label"><i class="ti ti-users"></i> رصيد الأجر (تحصيل العملاء)</div><div class="kpi-val green" style="font-size:24px">ج.م ${fmtC(totAjr)}</div><div class="kpi-sub">${ajr.length} عملية</div></div>
+    <div class="kpi gold"><div class="kpi-label"><i class="ti ti-building-bank"></i> رصيد أمانات فاين جولد</div><div class="kpi-val gold" style="font-size:24px">ج.م ${fmtC(totAIn-totAOut)}</div><div class="kpi-sub">استلام ${fmtC(totAIn)} — صرف ${fmtC(totAOut)}</div></div>`;
+}
+
+// Gold Opening
+function getObVal(id){
+  const el=document.getElementById(id);
+  if(!el||!el.value.trim()) return 0;
+  try{
+    const safe=el.value.replace(/[^0-9.+\-*\/\s]/g,'');
+    const r=Function('"use strict";return ('+safe+')')();
+    return(!isNaN(r)&&isFinite(r)&&r>=0)?r:0;
+  }catch(e){return 0;}
+}
+
+function saveGoldOpening(){
+  const dateEl=document.getElementById('ob-date');
+  const date=dateEl?dateEl.value:today;
+  if(!date){alert('اختار التاريخ');return;}
+  const entries=[
+    {carat:'عيار 21',amount:getObVal('ob-g21'),desc:'رصيد أول المدة عيار 21'},
+    {carat:'عيار 18',amount:getObVal('ob-g18'),desc:'رصيد أول المدة عيار 18'},
+  ].filter(e=>e.amount>0);
+  if(!entries.length){alert('أدخل رصيد على الأقل عيار واحد');return;}
+  CE=CE.filter(e=>!(e.type==='ذهب'&&e.reference==='gold-opening'));
+  entries.forEach((e,i)=>CE.push({id:Date.now()+i,date,type:'ذهب',operation:'استلام',amount:e.amount,unit:'جم',description:e.desc,client:'رصيد أول المدة',reference:'gold-opening',carat:e.carat,labor:0,balance:null}));
+  save();updateKPI();renderCollect();
+  const s=document.getElementById('ob-status');s.textContent='✓ تم الحفظ';setTimeout(()=>s.textContent='',3000);
+}
+
+// File upload
+function dropF(e,w){e.preventDefault();e.currentTarget.style.borderColor='';const f=e.dataTransfer.files[0];if(f)procFile(f,w);}
+function pickF(e,w){const f=e.target.files[0];if(f)procFile(f,w);e.target.value='';}
+
+async function procFile(file,which){
+  showProc(which,'جاري قراءة الملف...');
+  const ext=file.name.split('.').pop().toLowerCase();
+  try{
+    const ab=await file.arrayBuffer();
+    const wb=XLSX.read(new Uint8Array(ab),{type:'array',cellDates:true});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:false});
+    if(which==='gold') parseGold(rows);
+    else parseCash(rows);
+  }catch(e){hideProc(which);showToast(which,false,'خطأ: '+e.message);}
+}
+
+function toISO(v){
+  if(!v&&v!==0) return '';
+  // JS Date object (from SheetJS cellDates:true)
+  if(v instanceof Date){
+    return v.getFullYear()+'-'+String(v.getMonth()+1).padStart(2,'0')+'-'+String(v.getDate()).padStart(2,'0');
+  }
+  const s=String(v).trim();
+  if(!s||s==='null'||s==='undefined') return '';
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.substring(0,10);
+  if(s.includes('/')){
+    const p=s.split('/');
+    if(p.length===3){
+      const y=parseInt(p[2])>100?p[2]:'20'+p[2];
+      return parseInt(p[0])>12
+        ?y+'-'+p[1].padStart(2,'0')+'-'+p[0].padStart(2,'0')
+        :y+'-'+p[0].padStart(2,'0')+'-'+p[1].padStart(2,'0');
+    }
+  }
+  // Excel serial number
+  if(/^\d+$/.test(s)){
+    const n=parseInt(s);
+    if(n>40000&&n<60000){
+      const d=new Date(Math.round((n-25569)*86400*1000));
+      return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
+    }
+  }
+  return '';
+}
+
+// Cash parser
+function parseCash(rows){
+  const results=[];
+  const pn=s=>parseFloat(String(s||'').replace(/,/g,''))||0;
+  let C=null;
+  for(const row of rows){
+    const r=row.map(v=>String(v||'').trim());
+    const ri=r.indexOf('Reference'),di=r.indexOf('Debit'),ci=r.indexOf('Credit'),bi=r.indexOf('Balance');
+    const fi=r.indexOf('Function Name'),dti=r.indexOf('Date'),dsi=r.indexOf('Description'),aci=r.indexOf('Account Info');
+    if(ri>=0&&di>=0){
+      const fnActual=fi>=0?fi+1:3;
+      C={fn:fnActual,dt:dti>=0?dti:6,rf:ri,ds:dsi>=0?dsi:ri+2,ac:aci>=0?aci:ri+4,db:di,cr:ci>=0?ci:di+2,bl:bi>=0?bi:di+4};
+      break;
+    }
+  }
+  if(!C)C={fn:3,dt:6,rf:8,ds:13,ac:17,db:23,cr:25,bl:29};
+  // Pre-fill merged cells: carry forward last non-empty Description
+  // But skip opening balance and previous period rows
+  let lastDesc='';
+  for(const row of rows){
+    if(!row||row.length<=C.ds) continue;
+    const fn=String(row[C.fn]||'').trim();
+    // Skip header/opening rows for carry-forward
+    if(['opening Balance','opening balance','previous period','Function Name',''].includes(fn)) continue;
+    const dsVal=String(row[C.ds]||'').trim();
+    if(dsVal&&dsVal!=='opening balance'&&dsVal!=='opening Balance') lastDesc=dsVal;
+    else if(row[C.rf]&&String(row[C.rf]).trim()&&lastDesc) row[C.ds]=lastDesc;
+  }
+  for(const row of rows){
+    if(!row||row.length<=C.cr) continue;
+    const fn=String(row[C.fn]||'').trim();
+    if(fn==='previous period'){
+      const bal=pn(row[C.bl]),date=toISO(row[C.dt]);
+      if(date) results.push({id:Date.now()+results.length,date,type:'نقدية',operation:'استلام',amount:bal,unit:'ج.م',description:'رصيد أول المدة',descriptionField:'رصيد أول المدة',client:'رصيد أول المدة',reference:'opening',balance:bal});
+      continue;
+    }
+    if(['opening Balance','opening balance','','Function Name'].includes(fn)) continue;
+    const rf=String(row[C.rf]||'').trim();
+    if(!rf||rf.length<3||rf==='Reference') continue;
+    const db=pn(row[C.db]),cr=pn(row[C.cr]);
+    if(db===0&&cr===0) continue;
+    const date=toISO(row[C.dt]);if(!date) continue;
+    const ac=String(row[C.ac]||'').trim(),bl=pn(row[C.bl]);
+    const ds_val=String(row[C.ds]||'').trim();
+    results.push({id:Date.now()+results.length,date,type:'نقدية',operation:db>0?'استلام':'صرف',amount:db>0?db:cr,unit:'ج.م',description:fn,descriptionField:ds_val,client:ac,reference:rf,balance:bl});
+  }
+  if(results.length){CE=[...CE,...results];save();updateKPI();renderCollect();hideProc('cash');showToast('cash',true,'تم إضافة '+results.length+' حركة نقدية ✓');}
+  else{hideProc('cash');showToast('cash',false,'لم تُستخرج بيانات — تأكد إنه كشف Argus');}
+}
+
+// Gold parser
+const SKU_MAP={'21-0001':'كسر سادة واحجار','21-1018':'كسر ايجيبت (15ج)','21-1021':'كسر شعبي','18-0001':'كسر سادة واحجار','18-0005':'كسر شعبي','18-1018':'كسر ايجيبت (12.85ج)','24-0001':'سبائك عيار 24'};
+function parseCarat(sku){return sku.startsWith('21')?'عيار 21':sku.startsWith('18')?'عيار 18':sku.startsWith('24')?'عيار 24':'ذهب';}
+
+function parseGold(rows){
+  const results=[];
+  const pn=s=>parseFloat(String(s||'').replace(/,/g,''))||0;
+  let C=null;
+  // Auto-detect header row
+  for(const row of rows){
+    if(!row) continue;
+    const r=row.map(v=>String(v||'').trim());
+    const ri=r.indexOf('Reference');
+    const dti=r.indexOf('Date');
+    if(ri>=0&&dti>=0){
+      // Find other columns relative to Reference
+      const ani=r.indexOf('Account Name');
+      const skui=r.indexOf('SKU');
+      const ni=r.indexOf('Name');
+      const qi=r.indexOf('Qty');
+      const li=r.indexOf('Total Labor')>=0?r.indexOf('Total Labor'):r.indexOf('Unit Labor');
+      const si=r.indexOf('Status');
+      const ari=r.indexOf('Accoun Ref')<0?r.indexOf('Account Ref'):r.indexOf('Accoun Ref');
+      C={ref:ri,dt:dti,acRef:ari>=0?ari:ri+5,acName:ani>=0?ani:ri+7,sku:skui>=0?skui:ri+8,name:ni>=0?ni:ri+10,qty:qi>=0?qi:ri+12,labor:li>=0?li:ri+17,status:si>=0?si:ri+22};
+      break;
+    }
+  }
+  if(!C)C={ref:2,dt:3,acRef:7,acName:9,sku:10,name:12,qty:14,labor:20,status:24};
+  for(const row of rows){
+    if(!row||row.length<=C.qty) continue;
+    const ref=String(row[C.ref]||'').trim();
+    if(!ref.startsWith('RG')&&!ref.startsWith('PG')) continue;
+    const status=String(row[C.status]||'').trim();
+    if(status&&status!=='Posted') continue;
+    const date=toISO(row[C.dt]);if(!date) continue;
+    const qty=pn(row[C.qty]);if(!qty) continue;
+    const sku=String(row[C.sku]||'').trim();
+    const name=String(row[C.name]||'').trim();
+    const client=String(row[C.acName]||row[C.acRef]||'').trim();
+    const labor=pn(row[C.labor]);
+    const carat=parseCarat(sku,name);
+    const kasrType=SKU_MAP[sku]||name||carat;
+    // Description col in gold file is after Total Labor (col 21 when ref=col 2)
+    const descIdx=C.labor+1;
+    const gdesc=row.length>descIdx?String(row[descIdx]||'').trim():'';
+    // Total Qty G21 column
+    const tqg21Idx=C.ref+16;
+    const totalQtyG21=row.length>tqg21Idx?Math.abs(parseFloat(String(row[tqg21Idx]||'').replace(/,/g,''))||0):0;
+    // لو Total Qty G21 مختلف عن Qty = سبائك أو عيار غير 21 → استخدم G21
+    const rawQty=Math.round(Math.abs(qty)*100)/100;
+    const isSabika=sku.startsWith('24')||sku==='21-0000'||/سبايك|سبائك|بلدي|بندقي/i.test(name||'');
+    const finalAmount=isSabika&&totalQtyG21>0?Math.round(totalQtyG21*100)/100:rawQty;
+    results.push({id:Date.now()+results.length,date,type:'ذهب',operation:ref.startsWith('RG')?'استلام':'صرف',
+      amount:finalAmount,
+      unit:'جم',description:kasrType,descriptionField:gdesc,client,reference:ref,carat,labor,balance:null});
+  }
+  if(results.length){CE=[...CE,...results];save();updateKPI();renderCollect();hideProc('gold');showToast('gold',true,'تم إضافة '+results.length+' حركة ذهب ✓');}
+  else{hideProc('gold');showToast('gold',false,'لم تُستخرج بيانات — تأكد إنه ملف FI205');}
+}
+
+// Modal
+function openModal(){document.getElementById('addModal').classList.add('open');document.getElementById('m-date').value=today;}
+function closeModal(){document.getElementById('addModal').classList.remove('open');}
+function toggleUnit(){
+  const isGold=document.getElementById('m-type').value==='ذهب';
+  document.getElementById('m-ul').textContent=isGold?'الوزن (جم)':'المبلغ (ج.م)';
+  document.getElementById('m-carat-box').style.display=isGold?'':'none';
+}
+function saveEntry(){
+  const t=document.getElementById('m-type').value;
+  const isGold=t==='ذهب';
+  const carat=isGold?document.getElementById('m-carat').value:'';
+  CE.push({
+    id:Date.now(),
+    date:document.getElementById('m-date').value,
+    type:t,
+    operation:document.getElementById('m-op').value,
+    amount:parseFloat(document.getElementById('m-amt').value)||0,
+    unit:isGold?'جم':'ج.م',
+    description:document.getElementById('m-desc').value||( isGold?carat:''),
+    client:document.getElementById('m-client').value,
+    reference:'manual',
+    carat,labor:0,balance:null
+  });
+  save();updateKPI();renderCollect();closeModal();
+  ['m-amt','m-desc','m-client'].forEach(id=>document.getElementById(id).value='');
+}
+
+// Export
+function exportCSV(){
+  const rows=[['التاريخ','النوع','العملية','المبلغ','الوحدة','رقم السند','العميل','الرصيد']];
+  CE.forEach(e=>rows.push([e.date,e.type,e.operation,e.amount,e.unit||'',e.reference||'',e.client||'',e.balance||'']));
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+rows.map(r=>r.join(',')).join('\n')],{type:'text/csv;charset=utf-8'}));
+  a.download='خزينة_التحصيل.csv';a.click();
+}
+
+// Clear all
+function clearAll(){if(confirm('تأكيد مسح كل البيانات؟')){CE=[];save();updateKPI();renderCollect();}}
+
+// Proc / Toast
+function showProc(w,msg){const p=document.getElementById('proc-'+w);if(p){p.style.display='';document.getElementById('proc-'+w+'-msg').textContent=msg;}const t=document.getElementById('toast-'+w);if(t)t.style.display='none';}
+function hideProc(w){const p=document.getElementById('proc-'+w);if(p)p.style.display='none';}
+function showToast(w,ok,msg){const el=document.getElementById('toast-'+w);if(!el)return;el.className='toast '+(ok?'ok':'err');el.innerHTML=`<i class="ti ${ok?'ti-circle-check':'ti-alert-circle'}"></i>${msg}`;el.style.display='flex';if(ok)setTimeout(()=>el.style.display='none',5000);}
+
+// Theme
+function toggleTheme(){const d=document.body.classList.toggle('dark');document.getElementById('themeIcon').className=d?'ti ti-sun':'ti ti-moon';document.getElementById('themeTxt').textContent=d?'الوضع الفاتح':'الوضع الداكن';try{localStorage.setItem('neg_theme',d?'dark':'light');}catch(e){}}
+
+// ── Multi-day storage ──
+let currentViewDate = today;
+
+function getDayKey(date){ return 'neg_day_'+date; }
+
+function saveCurrentDay(){
+  const key=getDayKey(currentViewDate);
+  const data={ce:CE,be:BE,ie:IE,date:currentViewDate,savedAt:new Date().toISOString()};
+  try{
+    localStorage.setItem(key,JSON.stringify(data));
+    // Keep index of saved days
+    let days=JSON.parse(localStorage.getItem('neg_days_index')||'[]');
+    if(!days.includes(currentViewDate)){days.push(currentViewDate);days.sort().reverse();}
+    localStorage.setItem('neg_days_index',JSON.stringify(days));
+    showDayMsg('✓ تم حفظ بيانات يوم '+currentViewDate);
+  }catch(e){showDayMsg('خطأ في الحفظ: '+e.message);}
+}
+
+function loadDay(date){
+  const key=getDayKey(date);
+  try{
+    const raw=localStorage.getItem(key);
+    if(raw){
+      const data=JSON.parse(raw);
+      CE=data.ce||[];BE=data.be||[];IE=data.ie||[];
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
+function changeViewDate(){
+  const date=document.getElementById('viewDate').value;
+  if(!date) return;
+  currentViewDate=date;
+  // Try to load saved data for this date
+  const loaded=loadDay(date);
+  if(loaded){
+    showDayMsg('📅 عرض بيانات يوم '+date+' — محفوظة مسبقاً');
+  } else {
+    // New day - clear data
+    CE=[];BE=[];IE=[];
+    showDayMsg('📅 يوم جديد: '+date+' — ارفع ملفات اليوم');
+  }
+  updateKPI();renderCollect();
+}
+
+function showDayMsg(msg){
+  const el=document.getElementById('dayMsg');
+  el.textContent=msg;el.style.display='';
+  setTimeout(()=>el.style.display='none',4000);
+}
+
+function showDaysList(){
+  const days=JSON.parse(localStorage.getItem('neg_days_index')||'[]');
+  const el=document.getElementById('daysList');
+  if(!days.length){el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--text3)">لا توجد أيام محفوظة بعد</div>';}
+  else{
+    el.innerHTML=days.map(d=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer" 
+           onclick="loadDayFromList('${d}')" class="day-row">
+        <div style="display:flex;align-items:center;gap:10px">
+          <i class="ti ti-calendar" style="color:var(--gold)"></i>
+          <span style="font-weight:700;font-size:14px">${d}</span>
+          <span style="font-size:11px;color:var(--text3)">${new Date(d).toLocaleDateString('ar-EG',{weekday:'long'})}</span>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button onclick="event.stopPropagation();loadDayFromList('${d}')" class="btn btn-gold" style="padding:4px 12px;font-size:11px">
+            <i class="ti ti-eye"></i> عرض
+          </button>
+          <button onclick="event.stopPropagation();deleteDay('${d}')" class="btn" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red);padding:4px 12px;font-size:11px">
+            <i class="ti ti-trash"></i>
+          </button>
+        </div>
+      </div>`).join('');
+  }
+  document.getElementById('daysModal').classList.add('open');
+}
+
+function loadDayFromList(date){
+  document.getElementById('viewDate').value=date;
+  document.getElementById('daysModal').classList.remove('open');
+  changeViewDate();
+}
+
+function deleteDay(date){
+  if(!confirm('حذف بيانات يوم '+date+'؟')) return;
+  localStorage.removeItem(getDayKey(date));
+  let days=JSON.parse(localStorage.getItem('neg_days_index')||'[]');
+  days=days.filter(d=>d!==date);
+  localStorage.setItem('neg_days_index',JSON.stringify(days));
+  showDaysList();
+}
+
+// Save/Load (current day)
+function save(){
+  try{
+    localStorage.setItem('neg_ce',JSON.stringify(CE));
+    localStorage.setItem('neg_be',JSON.stringify(BE));
+    localStorage.setItem('neg_ie',JSON.stringify(IE));
+    // Auto-save to current day
+    saveCurrentDay();
+  }catch(e){}
+}
+function load(){
+  try{
+    const c=localStorage.getItem('neg_ce');if(c)CE=JSON.parse(c);
+    const b=localStorage.getItem('neg_be');if(b)BE=JSON.parse(b);
+    const i=localStorage.getItem('neg_ie');if(i)IE=JSON.parse(i);
+    updateKPI();
+  }catch(e){}
+}
+
+document.getElementById('addModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+try{if(localStorage.getItem('neg_theme')==='dark'){document.body.classList.add('dark');document.getElementById('themeIcon').className='ti ti-sun';document.getElementById('themeTxt').textContent='الوضع الفاتح';}}catch(e){}
+load();
+</script>
+</body>
+</html>
